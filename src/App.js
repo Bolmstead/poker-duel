@@ -31,15 +31,16 @@ import {
 } from "./pokerSolver";
 
 import Container from "@mui/material/Container";
-// import io from "socket.io-client";
-// const socket = io("http://localhost:3001");
+import { io } from "socket.io-client";
+const socket = io("http://localhost:3001");
 
 function OlmsteadBall() {
-  const [board, setboard] = useState([]);
-  const [player1Cards, setplayer1Cards] = useState([]);
-  const [player2Cards, setplayer2Cards] = useState([]);
+  const [deck, setDeck] = useState([]);
+
+  const [player1Cards, setPlayer1Cards] = useState([]);
+  const [player2Cards, setPlayer2Cards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
-  const [playersTurn, setplayersTurn] = useState(1);
+  const [playersTurn, setPlayersTurn] = useState(1);
   const [player1HandsSolved, setPlayer1HandsSolved] = useState([]);
   const [player2HandsSolved, setPlayer2HandsSolved] = useState([]);
   const [winners, setWinners] = useState([]);
@@ -103,13 +104,29 @@ function OlmsteadBall() {
     "Ks",
   ];
 
-  const [deck, setDeck] = useState([]);
-
   useEffect(() => {
-    // socket.emit("game start", () => {
-    //   console.log("🥳 connection emitted");
-    // });
-  }, []);
+    socket.on("game started", (data) => {
+      console.log(data);
+      let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
+        data;
+      setDeck(deck);
+      setPlayer1Cards(player1Cards);
+      setPlayer2Cards(player2Cards);
+      setSelectedCard(selectedCard);
+      setPlayersTurn(playersTurn);
+    });
+
+    socket.on("card played", (data) => {
+      console.log(data);
+      let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
+        data;
+      setDeck(deck);
+      setPlayer1Cards(player1Cards);
+      setPlayer2Cards(player2Cards);
+      setSelectedCard(selectedCard);
+      setPlayersTurn(playersTurn);
+    });
+  }, [socket]);
 
   function shuffle(array) {
     const copy = [];
@@ -132,7 +149,8 @@ function OlmsteadBall() {
   }
 
   function startGame() {
-    setplayersTurn(1);
+    let tempPlayersTurn = 1;
+    setPlayersTurn(tempPlayersTurn);
     setPlayer1HandsSolved([]);
     setPlayer2HandsSolved([]);
     setWinners([]);
@@ -163,9 +181,17 @@ function OlmsteadBall() {
     const newCard = newDeck.pop();
 
     setDeck(newDeck);
-    setplayer1Cards(tempPlayer1Hand);
-    setplayer2Cards(tempPlayer2Hand);
+    setPlayer1Cards(tempPlayer1Hand);
+    setPlayer2Cards(tempPlayer2Hand);
     setSelectedCard(newCard);
+
+    socket.emit("game start", {
+      deck: newDeck,
+      player1Cards: tempPlayer1Hand,
+      player2Cards: tempPlayer2Hand,
+      selectedCard: newCard,
+      playersTurn: tempPlayersTurn,
+    });
   }
 
   function placeCard(card, playerSide, handNumber) {
@@ -181,10 +207,15 @@ function OlmsteadBall() {
 
     playersCards[handNumber].push(selectedCard);
 
+    let tempPlayer1Cards, tempPlayer2Cards
     if (playersTurn === 1) {
-      setplayer1Cards(playersCards);
+      tempPlayer1Cards = playersCards
+      tempPlayer2Cards = player2Cards
+      setPlayer1Cards(playersCards);
     } else if (playersTurn === 2) {
-      setplayer2Cards(playersCards);
+      tempPlayer1Cards = player1Cards
+      tempPlayer2Cards = playersCards
+      setPlayer2Cards(playersCards);
     }
 
     const tempDeck = deck;
@@ -198,16 +229,25 @@ function OlmsteadBall() {
     // if (player1Cards.length > 4 || player2Cards.length > 4) {
     //   finishGame();
     // }
+
+    let nextPlayersTurn;
     if (playersTurn === 1) {
-      setplayersTurn(2);
+      nextPlayersTurn = 2;
+      setPlayersTurn(nextPlayersTurn);
     } else if (playersTurn === 2) {
-      setplayersTurn(1);
+      nextPlayersTurn = 1;
+      setPlayersTurn(nextPlayersTurn);
     }
     const newCard = tempDeck.pop();
     setSelectedCard(newCard);
-    // socket.emit("placed card", () => {
-    //   console.log("🎉 placedCard");
-    // });
+
+    socket.emit("card played", {
+      deck: tempDeck,
+      player1Cards: tempPlayer1Cards,
+      player2Cards: tempPlayer2Cards,
+      selectedCard: newCard,
+      playersTurn: nextPlayersTurn,
+    });
   }
 
   function finishGame() {
