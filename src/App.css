@@ -1,0 +1,90 @@
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.card-front {
+  box-sizing: border-box;
+  width: 50px;
+  height: 71px;
+  margin: 10px;
+  float: left;
+  background-color: white;
+  background-position-x: 0px;
+  background-position-y: center;
+  background-repeat: none;
+  background-position: middle center;
+  background-size: cover;
+  border: 1px #555555 solid;
+  border-radius: 2px;
+  -webkit-box-shadow: 2px 2px 3px 0px #000000;
+  box-shadow: 2px 2px 3px 0px #000000;
+  background-repeat: no-repeat;
+}
+
+.card-back {
+  box-sizing: border-box;
+  width: 150px;
+  height: 214px;
+  margin: 10px;
+  padding: 5px;
+  float: left;
+  background-color: white;
+  background-image: url("../public/card-back.jpeg");
+  background-position-x: 0px;
+  background-position-y: center;
+  background-repeat: none;
+  background-position: middle center;
+  background-size: cover;
+  border: 1px #555555 solid;
+  border-radius: 10px;
+  -webkit-box-shadow: 2px 2px 3px 0px #000000;
+  box-shadow: 2px 2px 3px 0px #000000;
+  background-repeat: no-repeat;
+}
+
+.empty-space {
+  width: 150px;
+  height: 214px;
+  margin: 10px;
+  float: left;
+}
+
+.a-player-deck {
+  display: "flex";
+  flex-direction: row-reverse;
+}
