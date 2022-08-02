@@ -3,8 +3,15 @@ import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+
+import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
+import CircularProgress from "@mui/material/CircularProgress";
+
+import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
+import Modal from "@mui/material/Modal";
+
 import {
   values,
   Card as PokerCard,
@@ -31,12 +38,34 @@ import {
 } from "./pokerSolver";
 
 import Container from "@mui/material/Container";
+
 import { io } from "socket.io-client";
+
 const socket = io("http://localhost:3001");
+
+const modalStyle = {
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  transform: "translate(-50%, -50%)",
+  width: 400,
+  bgcolor: "background.paper",
+  border: "2px solid #000",
+  boxShadow: 24,
+  p: 4,
+};
 
 function OlmsteadBall() {
   const [deck, setDeck] = useState([]);
+  const [enteredUsername, setEnteredUsername] = useState(null);
 
+  const [player1Username, setPlayer1Username] = useState(null);
+  console.log(
+    "🚀 ~ file: App.js ~ line 56 ~ OlmsteadBall ~ player1Username",
+    player1Username
+  );
+  const [player2Username, setPlayer2Username] = useState(null);
+  const [modalVisible, setModalVisible] = useState(true);
   const [player1Cards, setPlayer1Cards] = useState([]);
   const [player2Cards, setPlayer2Cards] = useState([]);
   const [selectedCard, setSelectedCard] = useState(null);
@@ -105,15 +134,9 @@ function OlmsteadBall() {
   ];
 
   useEffect(() => {
-    socket.on("game started", (data) => {
-      console.log(data);
-      let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
-        data;
-      setDeck(deck);
-      setPlayer1Cards(player1Cards);
-      setPlayer2Cards(player2Cards);
-      setSelectedCard(selectedCard);
-      setPlayersTurn(playersTurn);
+    socket.on("player joined", (othersUsername) => {
+      setPlayer2Username(othersUsername)
+      startGame()
     });
 
     socket.on("card played", (data) => {
@@ -127,6 +150,18 @@ function OlmsteadBall() {
       setPlayersTurn(playersTurn);
     });
   }, [socket]);
+
+  function submitUsername() {
+    if (!enteredUsername) {
+      return;
+    }
+    if (enteredUsername.length <= 3) {
+      return;
+    }
+    setModalVisible(false);
+
+    socket.emit("join room", enteredUsername);
+  }
 
   function shuffle(array) {
     const copy = [];
@@ -191,6 +226,7 @@ function OlmsteadBall() {
       player2Cards: tempPlayer2Hand,
       selectedCard: newCard,
       playersTurn: tempPlayersTurn,
+      player1Username: player1Username
     });
   }
 
@@ -207,14 +243,14 @@ function OlmsteadBall() {
 
     playersCards[handNumber].push(selectedCard);
 
-    let tempPlayer1Cards, tempPlayer2Cards
+    let tempPlayer1Cards, tempPlayer2Cards;
     if (playersTurn === 1) {
-      tempPlayer1Cards = playersCards
-      tempPlayer2Cards = player2Cards
+      tempPlayer1Cards = playersCards;
+      tempPlayer2Cards = player2Cards;
       setPlayer1Cards(playersCards);
     } else if (playersTurn === 2) {
-      tempPlayer1Cards = player1Cards
-      tempPlayer2Cards = playersCards
+      tempPlayer1Cards = player1Cards;
+      tempPlayer2Cards = playersCards;
       setPlayer2Cards(playersCards);
     }
 
@@ -319,6 +355,65 @@ function OlmsteadBall() {
     setWinners(tempWinners);
   }
 
+  if (!player1Username || !player2Username) {
+    return (
+      <Container
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          marginTop: "10px",
+          height: "92vh",
+        }}
+      >
+        <Modal open={modalVisible}>
+          <Box sx={modalStyle}>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Typography id="modal-modal-title" variant="h6" component="h2">
+                Username?
+              </Typography>
+            </div>
+            <TextField
+              id="username"
+              type="username"
+              style={{ width: "100%" }}
+              onChange={(e) => setEnteredUsername(e.target.value)}
+            />{" "}
+            <Button
+              style={{ width: "100%" }}
+              disabled={!enteredUsername}
+              onClick={submitUsername}
+            >
+              Find Game
+            </Button>
+          </Box>
+        </Modal>
+        {(!player1Username || !player2Username) && enteredUsername ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <CircularProgress disableShrink style={{ marginBottom: "10px" }} />
+            <Typography variant="h5" component="h5">
+              Searching for an opponent...
+            </Typography>
+          </div>
+        ) : null}
+      </Container>
+    );
+  }
+
   let testing = true;
   if (testing) {
     return (
@@ -352,11 +447,14 @@ function OlmsteadBall() {
             Deal
           </Button>
 
-          {winner ? (
-            <span>Player {winner} Wins!</span>
-          ) : (
-            <span>Player {playersTurn}'s turn</span>
-          )}
+          {selectedCard && !winner ? (
+            playersTurn === 1 ? (
+              <span>{player1Username}'s turn</span>
+            ) : (
+              <span>{player2Username}'s turn</span>
+            )
+          ) : null}
+          {winner ? <span>Player {winner} won!</span> : null}
         </div>
 
         <Box
@@ -826,7 +924,7 @@ function OlmsteadBall() {
         >
           Deal
         </Button>
-        <span>Player {playersTurn}'s turn</span>
+        {deck ? <span>{player1Username}'s turn</span> : null}
       </div>
 
       <Box
