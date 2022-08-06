@@ -75,6 +75,7 @@ function OlmsteadBall() {
   const [winners, setWinners] = useState([]);
 
   const [winner, setWinner] = useState(null);
+  const [userLeftAlert, setUserLeftAlert] = useState(false);
 
   const unshuffledDeck = [
     "Ad",
@@ -164,7 +165,7 @@ function OlmsteadBall() {
     });
 
     socket.on("user card played", (data) => {
-      console.log("card played!!!")
+      console.log("card played!!!");
       console.log(data);
       let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
         data;
@@ -196,6 +197,21 @@ function OlmsteadBall() {
       setWinner(winner);
       setWinners(winners);
       setSelectedCard(null);
+    });
+    socket.on("user has left", (data) => {
+      console.log("user has left!")
+      console.log(data);
+      setDeck([]);
+      setPlayer1Cards([]);
+      setPlayer2Cards([]);
+      setSelectedCard(null);
+      setPlayersTurn(null);
+      setPlayer1HandsSolved([]);
+      setPlayer2HandsSolved([]);
+      setWinner(null);
+      setWinners([]);
+      setSelectedCard(null);
+      setUserLeftAlert(true);
     });
   }, [socket]);
 
@@ -343,8 +359,7 @@ function OlmsteadBall() {
     const newCard = tempDeck.pop();
     setSelectedCard(newCard);
 
-    console.log("roomName", roomName)
-
+    console.log("roomName", roomName);
 
     socket.emit("card played", {
       deck: tempDeck,
@@ -352,7 +367,7 @@ function OlmsteadBall() {
       player2Cards: tempPlayer2Cards,
       selectedCard: newCard,
       playersTurn: nextPlayersTurn,
-      room: roomName
+      room: roomName,
     });
   }
 
@@ -432,6 +447,58 @@ function OlmsteadBall() {
       winner: tempWinner,
       roomName: roomName,
     });
+  }
+
+  if (userLeftAlert) {
+    return (
+      <Container
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          flexDirection: "column",
+          marginTop: "10px",
+          height: "92vh",
+        }}
+      >
+        <Modal open={true}>
+          <Box sx={modalStyle}>
+            <div
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Typography id="modal-modal-title" variant="h6" component="h2">
+                User left game. You win!
+              </Typography>
+            </div>
+            <Button
+              style={{ width: "100%" }}
+              onClick={() => setUserLeftAlert(false)}
+            >
+              Play Again?
+            </Button>
+          </Box>
+        </Modal>
+        {(!player1Username || !player2Username) && enteredUsername ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "column",
+            }}
+          >
+            <CircularProgress disableShrink style={{ marginBottom: "10px" }} />
+            <Typography variant="h5" component="h5">
+              Searching for an opponent...
+            </Typography>
+          </div>
+        ) : null}
+      </Container>
+    );
   }
 
   if (!player1Username || !player2Username) {
