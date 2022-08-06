@@ -59,11 +59,11 @@ function OlmsteadBall() {
   const [deck, setDeck] = useState([]);
   const [enteredUsername, setEnteredUsername] = useState(null);
 
+  const [playersUsername, setPlayersUsername] = useState(null);
+  const [roomName, setRoomName] = useState(null);
+
   const [player1Username, setPlayer1Username] = useState(null);
-  console.log(
-    "🚀 ~ file: App.js ~ line 56 ~ OlmsteadBall ~ player1Username",
-    player1Username
-  );
+
   const [player2Username, setPlayer2Username] = useState(null);
   const [modalVisible, setModalVisible] = useState(true);
   const [player1Cards, setPlayer1Cards] = useState([]);
@@ -73,10 +73,8 @@ function OlmsteadBall() {
   const [player1HandsSolved, setPlayer1HandsSolved] = useState([]);
   const [player2HandsSolved, setPlayer2HandsSolved] = useState([]);
   const [winners, setWinners] = useState([]);
-  console.log("🚀 ~ file: App.js ~ line 46 ~ OlmsteadBall ~ winners", winners);
 
   const [winner, setWinner] = useState(null);
-  console.log("🚀 ~ file: App.js ~ line 49 ~ OlmsteadBall ~ winner", winner);
 
   const unshuffledDeck = [
     "Ad",
@@ -134,12 +132,39 @@ function OlmsteadBall() {
   ];
 
   useEffect(() => {
-    socket.on("player joined", (othersUsername) => {
-      setPlayer2Username(othersUsername)
-      startGame()
+    socket.on("other_player_joined", (data) => {
+      console.log(
+        "🚀 ~ file: App.js ~ line 142 ~ socket.on ~ player joined",
+        data
+      );
+      console.log("enteredUsername", enteredUsername);
+      console.log("playersUsername", playersUsername);
+
+      startGame(data.username, data.roomName);
     });
 
-    socket.on("card played", (data) => {
+    socket.on("game started", (data) => {
+      console.log("game start data", data);
+      let {
+        deck,
+        player1Cards,
+        player2Cards,
+        selectedCard,
+        playersTurn,
+        player1Username,
+        player2Username,
+      } = data;
+      setDeck(deck);
+      setPlayer1Cards(player1Cards);
+      setPlayer2Cards(player2Cards);
+      setSelectedCard(selectedCard);
+      setPlayersTurn(playersTurn);
+      setPlayer1Username(player1Username);
+      setPlayer2Username(player2Username);
+    });
+
+    socket.on("user card played", (data) => {
+      console.log("card played!!!")
       console.log(data);
       let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
         data;
@@ -149,9 +174,32 @@ function OlmsteadBall() {
       setSelectedCard(selectedCard);
       setPlayersTurn(playersTurn);
     });
+
+    socket.on("game finished", (data) => {
+      console.log(data);
+      let {
+        deck,
+        player1Cards,
+        player2Cards,
+        player1HandsSolved,
+        player2HandsSolved,
+        winners,
+        winner,
+      } = data;
+      setDeck(deck);
+      setPlayer1Cards(player1Cards);
+      setPlayer2Cards(player2Cards);
+      setSelectedCard(null);
+      setPlayersTurn(null);
+      setPlayer1HandsSolved(player1HandsSolved);
+      setPlayer2HandsSolved(player2HandsSolved);
+      setWinner(winner);
+      setWinners(winners);
+      setSelectedCard(null);
+    });
   }, [socket]);
 
-  function submitUsername() {
+  function submitUsernameAndFindGame() {
     if (!enteredUsername) {
       return;
     }
@@ -159,7 +207,7 @@ function OlmsteadBall() {
       return;
     }
     setModalVisible(false);
-
+    setPlayersUsername(enteredUsername);
     socket.emit("join room", enteredUsername);
   }
 
@@ -183,8 +231,9 @@ function OlmsteadBall() {
     return copy;
   }
 
-  function startGame() {
-    let tempPlayersTurn = 1;
+  function startGame(p2Username, rmName) {
+    console.log("rmName", rmName);
+    let tempPlayersTurn = Math.random() < 0.5 ? 1 : 2;
     setPlayersTurn(tempPlayersTurn);
     setPlayer1HandsSolved([]);
     setPlayer2HandsSolved([]);
@@ -219,6 +268,21 @@ function OlmsteadBall() {
     setPlayer1Cards(tempPlayer1Hand);
     setPlayer2Cards(tempPlayer2Hand);
     setSelectedCard(newCard);
+    setPlayer1Username(playersUsername);
+    setPlayer2Username(p2Username);
+    setRoomName(rmName);
+
+    let ar = rmName.split("");
+    ar.splice(0, 6);
+    console.log("ar #1", ar);
+    ar.splice(-4, 4);
+    console.log("ar #2", ar);
+
+    let p1Username = ar.join("");
+    console.log(
+      "🚀 ~ file: App.js ~ line 238 ~ startGame ~ p1Username",
+      p1Username
+    );
 
     socket.emit("game start", {
       deck: newDeck,
@@ -226,7 +290,9 @@ function OlmsteadBall() {
       player2Cards: tempPlayer2Hand,
       selectedCard: newCard,
       playersTurn: tempPlayersTurn,
-      player1Username: player1Username
+      player1Username: p1Username,
+      player2Username: p2Username,
+      roomName: rmName,
     });
   }
 
@@ -259,7 +325,7 @@ function OlmsteadBall() {
     setDeck(tempDeck);
 
     if (tempDeck.length <= 2) {
-      finishGame();
+      finishGame(tempDeck, tempPlayer1Cards, tempPlayer2Cards);
     }
 
     // if (player1Cards.length > 4 || player2Cards.length > 4) {
@@ -277,16 +343,20 @@ function OlmsteadBall() {
     const newCard = tempDeck.pop();
     setSelectedCard(newCard);
 
+    console.log("roomName", roomName)
+
+
     socket.emit("card played", {
       deck: tempDeck,
       player1Cards: tempPlayer1Cards,
       player2Cards: tempPlayer2Cards,
       selectedCard: newCard,
       playersTurn: nextPlayersTurn,
+      room: roomName
     });
   }
 
-  function finishGame() {
+  function finishGame(theDeck, theP1Cards, theP2Cards) {
     let p1h1Solved = Hand.solve(player1Cards[0], "standard", false);
 
     let p1h2Solved = Hand.solve(player1Cards[1], "standard", false);
@@ -317,9 +387,6 @@ function OlmsteadBall() {
       p2h5Solved,
     ];
 
-    setPlayer1HandsSolved(tempP1HandsSolved);
-    setPlayer2HandsSolved(tempP2HandsSolved);
-
     const winners1 = Hand.winners([p1h1Solved, p2h1Solved]);
 
     const winners2 = Hand.winners([p1h2Solved, p2h2Solved]);
@@ -346,13 +413,25 @@ function OlmsteadBall() {
         tempWinners.push("no one?");
       }
     }
+    let tempWinner;
     if (p1Wins > p2Wins) {
-      setWinner(1);
+      tempWinner = 1;
     } else if (p2Wins > p1Wins) {
-      setWinner(2);
+      tempWinner = 2;
     }
 
-    setWinners(tempWinners);
+    setSelectedCard(null);
+
+    socket.emit("finish game", {
+      deck: theDeck,
+      player1Cards: theP1Cards,
+      player2Cards: theP2Cards,
+      player1HandsSolved: tempP1HandsSolved,
+      player2HandsSolved: tempP2HandsSolved,
+      winners: tempWinners,
+      winner: tempWinner,
+      roomName: roomName,
+    });
   }
 
   if (!player1Username || !player2Username) {
@@ -389,7 +468,7 @@ function OlmsteadBall() {
             <Button
               style={{ width: "100%" }}
               disabled={!enteredUsername}
-              onClick={submitUsername}
+              onClick={submitUsernameAndFindGame}
             >
               Find Game
             </Button>
@@ -424,6 +503,7 @@ function OlmsteadBall() {
           alignItems: "center",
           flexDirection: "column",
           marginTop: "10px",
+          backgroundColor: "black",
         }}
       >
         <div
@@ -434,27 +514,16 @@ function OlmsteadBall() {
             flexDirection: "column",
           }}
         >
-          <Button
-            variant="contained"
-            onClick={startGame}
-            style={{
-              width: "150px",
-              marginBottom: "10px",
-              backgroundColor: "#64BBFA",
-              color: "#1b1b1b",
-            }}
-          >
-            Deal
-          </Button>
-
           {selectedCard && !winner ? (
             playersTurn === 1 ? (
-              <span>{player1Username}'s turn</span>
+              <span style={{ color: "white" }}>{player1Username}'s turn</span>
             ) : (
-              <span>{player2Username}'s turn</span>
+              <span style={{ color: "white" }}>{player2Username}'s turn</span>
             )
           ) : null}
-          {winner ? <span>Player {winner} won!</span> : null}
+          {winner ? (
+            <span style={{ color: "white" }}>Player {winner} won!</span>
+          ) : null}
         </div>
 
         <Box
@@ -912,20 +981,7 @@ function OlmsteadBall() {
         marginTop: "10px",
       }}
     >
-      <div>
-        <Button
-          variant="contained"
-          onClick={startGame}
-          style={{
-            width: "150px",
-            backgroundColor: "#64BBFA",
-            color: "#1b1b1b",
-          }}
-        >
-          Deal
-        </Button>
-        {deck ? <span>{player1Username}'s turn</span> : null}
-      </div>
+      <div>{deck ? <span>{player1Username}'s turn</span> : null}</div>
 
       <Box
         style={{
