@@ -41,7 +41,11 @@ import Container from "@mui/material/Container";
 
 import { io } from "socket.io-client";
 
-const socket = io(process.env.BACKEND_URL);
+console.log("process.env", process.env);
+console.log("process.env.REACT_APP_BACKEND_URL", process.env.REACT_APP_BACKEND_URL);
+
+
+const socket = io(process.env.REACT_APP_BACKEND_URL);
 
 const modalStyle = {
   position: "absolute",
