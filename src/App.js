@@ -67,12 +67,9 @@ const modalStyle = {
 function OlmsteadBall() {
   const [deck, setDeck] = useState([]);
   const [enteredUsername, setEnteredUsername] = useState(null);
-
   const [playersUsername, setPlayersUsername] = useState(null);
   const [roomName, setRoomName] = useState(null);
-
   const [player1Username, setPlayer1Username] = useState(null);
-
   const [player2Username, setPlayer2Username] = useState(null);
   const [modalVisible, setModalVisible] = useState(true);
   const [player1Cards, setPlayer1Cards] = useState([]);
@@ -143,18 +140,10 @@ function OlmsteadBall() {
 
   useEffect(() => {
     socket.on("other_player_joined", (data) => {
-      console.log(
-        "🚀 ~ file: App.js ~ line 142 ~ socket.on ~ player joined",
-        data
-      );
-      console.log("enteredUsername", enteredUsername);
-      console.log("playersUsername", playersUsername);
-
       startGame(data.username, data.roomName);
     });
 
     socket.on("game started", (data) => {
-      console.log("game start data", data);
       let {
         deck,
         player1Cards,
@@ -175,7 +164,6 @@ function OlmsteadBall() {
 
     socket.on("user card played", (data) => {
       console.log("card played!!!");
-      console.log(data);
       let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
         data;
       setDeck(deck);
@@ -299,15 +287,9 @@ function OlmsteadBall() {
 
     let ar = rmName.split("");
     ar.splice(0, 6);
-    console.log("ar #1", ar);
     ar.splice(-4, 4);
-    console.log("ar #2", ar);
 
     let p1Username = ar.join("");
-    console.log(
-      "🚀 ~ file: App.js ~ line 238 ~ startGame ~ p1Username",
-      p1Username
-    );
 
     socket.emit("game start", {
       deck: newDeck,
@@ -322,6 +304,10 @@ function OlmsteadBall() {
   }
 
   function placeCard(card, playerSide, handNumber) {
+    console.log(
+      "🚀 ~ file: App.js ~ line 307 ~ placeCard ~ handNumber",
+      handNumber
+    );
     if (playersTurn !== playerSide) {
       return;
     }
@@ -329,6 +315,32 @@ function OlmsteadBall() {
     let playersCards = playersTurn === 1 ? player1Cards : player2Cards;
 
     if (playersCards[handNumber].length === 5) {
+      return;
+    }
+
+    let largestDeckLength = playersCards[0].length;
+
+    let allDecksSameLength = true;
+    for (let pHand of playersCards) {
+      if (pHand.length !== largestDeckLength) {
+        allDecksSameLength = false;
+      }
+      if (pHand.length > largestDeckLength) {
+        largestDeckLength = pHand.length;
+      }
+    }
+
+    console.log("largestDeckLength", largestDeckLength);
+    console.log("allDecksSameLength", allDecksSameLength);
+
+    console.log(playersCards[handNumber]);
+
+    if (playersCards[handNumber].length > largestDeckLength) {
+      return;
+    } else if (
+      playersCards[handNumber].length === largestDeckLength &&
+      !allDecksSameLength
+    ) {
       return;
     }
 
@@ -592,9 +604,17 @@ function OlmsteadBall() {
         >
           {selectedCard && !winner ? (
             playersTurn === 1 ? (
-              <span style={{ color: "white" }}>{player1Username}'s turn</span>
+              <span style={{ color: "white" }}>
+                {player1Username === playersUsername
+                  ? "Your Turn!"
+                  : `${player1Username}'s Turn!`}
+              </span>
             ) : (
-              <span style={{ color: "white" }}>{player2Username}'s turn</span>
+              <span style={{ color: "white" }}>
+                {player2Username === playersUsername
+                  ? "Your Turn!"
+                  : `${player2Username}'s Turn!`}
+              </span>
             )
           ) : null}
           {winner ? (
@@ -602,430 +622,861 @@ function OlmsteadBall() {
           ) : null}
         </div>
 
-        <Box
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "200px",
-          }}
-        >
-          {player1Cards.length > 0 ? (
-            <Grid
-              container
-              rowSpacing={1}
-              spacing={5}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <Grid item xs={2} className="a-player-deck">
-                {player1HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[0] === 1
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player1HandsSolved[0].descr}
-                  </Paper>
-                ) : null}
-                {player1Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-              </Grid>
-              <Grid item xs={2}>
-                {player1HandsSolved[1] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[1] === 1
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player1HandsSolved[1].descr}
-                  </Paper>
-                ) : null}
-                {player1Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player1HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[2] === 1
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player1HandsSolved[2].descr}
-                  </Paper>
-                ) : null}
-                {player1Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player1HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[3] === 1
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player1HandsSolved[3].descr}
-                  </Paper>
-                ) : null}
-                {player1Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player1HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[4] === 1
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player1HandsSolved[4].descr}
-                  </Paper>
-                ) : null}
-                {player1Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-              </Grid>
-            </Grid>
-          ) : null}
-        </Box>
-        <Box sx={{ width: "100%", minHeight: "200px" }}>
-          {player2Cards.length > 0 ? (
-            <Grid
-              container
-              rowSpacing={1}
-              spacing={5}
-              justifyContent="center"
-              alignItems="center"
+        {playersUsername === player1Username ? (
+          <Box sx={{ width: "100%", minHeight: "200px" }}>
+            {player2Cards.length > 0 ? (
+              <Grid
+                container
+                rowSpacing={1}
+                spacing={5}
+                justifyContent="center"
+                alignItems="center"
 
-              // style={{ backgroundColor: "purple" }}
-            >
-              <Grid item xs={2}>
-                {player2Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-                {player2HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[0] === 2
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player2HandsSolved[0].descr}
-                  </Paper>
-                ) : null}
+                // style={{ backgroundColor: "purple" }}
+              >
+                <Grid item xs={2}>
+                  {player2Cards[0].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 0)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[0] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[0] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[0].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>
+                <Grid item xs={2}>
+                  {player2Cards[1].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 1)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[1] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[1] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[1].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[2].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 2)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[2] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[2] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[2].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[3].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 3)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[3] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[3] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[3].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[4].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 4)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[4] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[4] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[4].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>
               </Grid>
-              <Grid item xs={2}>
-                {player2Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-                {player2HandsSolved[1] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[1] === 2
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player2HandsSolved[1].descr}
-                  </Paper>
-                ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-                {player2HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[2] === 2
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player2HandsSolved[2].descr}
-                  </Paper>
-                ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-                {player2HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[3] === 2
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player2HandsSolved[3].descr}
-                  </Paper>
-                ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
-                {player2HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: winners[0]
-                        ? winners[4] === 2
-                          ? "#56A053"
-                          : "#dd5c56"
-                        : "white",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {player2HandsSolved[4].descr}
-                  </Paper>
-                ) : null}
+            ) : null}
+          </Box>
+        ) : (
+          <Box
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "200px",
+            }}
+          >
+            {player1Cards.length > 0 ? (
+              <Grid
+                container
+                rowSpacing={1}
+                spacing={5}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Grid item xs={2} className="a-player-deck">
+                  {player1HandsSolved[0] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[0] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[0].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[0].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 0)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>
+                <Grid item xs={2}>
+                  {player1HandsSolved[1] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[1] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[1].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[1].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 1)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[2] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[2] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[2].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[2].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 2)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[3] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[3] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[3].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[3].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 3)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[4] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[4] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[4].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[4].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 4)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>
               </Grid>
-            </Grid>
-          ) : null}
-        </Box>
+            ) : null}
+          </Box>
+        )}
+
+        {playersUsername === player2Username ? (
+          <Box sx={{ width: "100%", minHeight: "200px" }}>
+            {player2Cards.length > 0 ? (
+              <Grid
+                container
+                rowSpacing={1}
+                spacing={5}
+                justifyContent="center"
+                alignItems="center"
+
+                // style={{ backgroundColor: "purple" }}
+              >
+                <Grid item xs={2}>
+                  {player2Cards[0].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 0)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[0] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[0] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[0].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>
+                <Grid item xs={2}>
+                  {player2Cards[1].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 1)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[1] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[1] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[1].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[2].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 2)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[2] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[2] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[2].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[3].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 3)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[3] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[3] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[3].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player2Cards[4].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 2, 4)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                  {player2HandsSolved[4] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[4] === 2
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player2HandsSolved[4].descr}
+                    </Paper>
+                  ) : null}
+                </Grid>
+              </Grid>
+            ) : null}
+          </Box>
+        ) : (
+          <Box
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              minHeight: "200px",
+            }}
+          >
+            {player1Cards.length > 0 ? (
+              <Grid
+                container
+                rowSpacing={1}
+                spacing={5}
+                justifyContent="center"
+                alignItems="center"
+              >
+                <Grid item xs={2} className="a-player-deck">
+                  {player1HandsSolved[0] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[0] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[0].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[0].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 0)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>
+                <Grid item xs={2}>
+                  {player1HandsSolved[1] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[1] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[1].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[1].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 1)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[2] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[2] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[2].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[2].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 2)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[3] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[3] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[3].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[3].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 3)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>{" "}
+                <Grid item xs={2}>
+                  {player1HandsSolved[4] ? (
+                    <Paper
+                      variant="outlined"
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: winners[0]
+                          ? winners[4] === 1
+                            ? "#56A053"
+                            : "#dd5c56"
+                          : "white",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "black",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {player1HandsSolved[4].descr}
+                    </Paper>
+                  ) : null}
+                  {player1Cards[4].map((card) => (
+                    <Paper
+                      variant="outlined"
+                      onClick={() => placeCard(card, 1, 4)}
+                      style={{
+                        display: "flex",
+                        margin: "5px",
+                        backgroundColor: "lightgray",
+                        height: "50px",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                    >
+                      {card}
+                    </Paper>
+                  ))}
+                </Grid>
+              </Grid>
+            ) : null}
+          </Box>
+        )}
 
         {deck.length > 0 && selectedCard ? (
           <Paper
