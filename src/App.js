@@ -41,7 +41,7 @@ import Container from "@mui/material/Container";
 
 import { io } from "socket.io-client";
 
-const socket = io("http://localhost:3001");
+const socket = io(process.env.BACKEND_URL);
 
 const modalStyle = {
   position: "absolute",
@@ -199,7 +199,7 @@ function OlmsteadBall() {
       setSelectedCard(null);
     });
     socket.on("user has left", (data) => {
-      console.log("user has left!")
+      console.log("user has left!");
       console.log(data);
       setDeck([]);
       setPlayer1Cards([]);
@@ -492,8 +492,8 @@ function OlmsteadBall() {
             }}
           >
             <CircularProgress disableShrink style={{ marginBottom: "10px" }} />
-            <Typography variant="h5" component="h5">
-              Searching for an opponent...
+            <Typography variant="h5" component="h5" style={{ color: "white" }}>
+              Waiting for an opponent...
             </Typography>
           </div>
         ) : null}
@@ -551,8 +551,8 @@ function OlmsteadBall() {
             }}
           >
             <CircularProgress disableShrink style={{ marginBottom: "10px" }} />
-            <Typography variant="h5" component="h5">
-              Searching for an opponent...
+            <Typography variant="h5" component="h5" style={{ color: "white" }}>
+              Waiting for an opponent...
             </Typography>
           </div>
         ) : null}
