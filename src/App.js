@@ -42,10 +42,15 @@ import Container from "@mui/material/Container";
 import { io } from "socket.io-client";
 
 console.log("process.env", process.env);
-console.log("process.env.REACT_APP_BACKEND_URL", process.env.REACT_APP_BACKEND_URL);
 
+let backendUrl =
+  process.env.REACT_APP_ENV === "production"
+    ? "https://olmstead-ball-backend.herokuapp.com/"
+    : "http://localhost:3001/";
 
-const socket = io(process.env.REACT_APP_BACKEND_URL);
+console.log("🚀 ~ file: App.js ~ line 51 ~ backendUrl", backendUrl);
+
+const socket = io(backendUrl);
 
 const modalStyle = {
   position: "absolute",
