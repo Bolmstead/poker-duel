@@ -612,7 +612,7 @@ function OlmsteadBall() {
               }}
             >
               <Typography id="modal-modal-title" variant="h6" component="h2">
-                User left game. You win!
+                User left the game!
               </Typography>
             </div>
             <Button
@@ -1612,41 +1612,82 @@ function OlmsteadBall() {
           {selectedCard}
         </Paper>
       ) : null}
+      {userThatWantsRematch ? (
+        userThatWantsRematch === playersUsername ? (
+          <Typography
+            variant="outlined"
+            style={{
+              display: "flex",
+              margin: "5px",
+              height: "50px",
+              width: "500px",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+            }}
+          >
+            Waiting on opponent to accept rematch...
+          </Typography>
+        ) : (
+          <Typography
+            variant="outlined"
+            style={{
+              display: "flex",
+              margin: "5px",
+              height: "50px",
+              width: "500px",
+              justifyContent: "center",
+              alignItems: "center",
+              color: "white",
+            }}
+          >
+            {userThatWantsRematch} wants a rematch!
+          </Typography>
+        )
+      ) : null}{" "}
       {winner ? (
-        <Button
-          style={{
-            minWidth: "200px",
-            backgroundColor: "lightgray",
-            color: "black",
-            marginTop: "50px",
-          }}
-          onClick={() => rematch()}
-        >
-          {userThatWantsRematch
-            ? userThatWantsRematch !== playersUsername
-              ? "Click to accept"
-              : "Rematch?"
-            : "Rematch?"}
-        </Button>
+        <>
+          {userThatWantsRematch && userThatWantsRematch !== playersUsername ? (
+            <Button
+              style={{
+                minWidth: "200px",
+                backgroundColor: "#56A053",
+                color: "black",
+                marginTop: "10px",
+              }}
+              onClick={() => rematch()}
+            >
+              ACCEPT
+            </Button>
+          ) : null}
+          {!userThatWantsRematch ? (
+            <Button
+              style={{
+                minWidth: "200px",
+                backgroundColor: "#F1Bf42",
+                color: "black",
+                marginTop: "10px",
+              }}
+              onClick={() => rematch()}
+            >
+              Rematch?
+            </Button>
+          ) : null}
+          <Button
+            style={{
+              minWidth: "200px",
+              backgroundColor: "lightgray",
+              color: "black",
+              marginTop: "10px",
+            }}
+            onClick={() => window.location.reload(false)}
+          >
+            New Random Game?
+          </Button>
+        </>
       ) : null}
-      {userThatWantsRematch && (
-        <Paper
-          variant="outlined"
-          style={{
-            display: "flex",
-            margin: "5px",
-            backgroundColor: "green",
-            height: "50px",
-            width: "150px",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {userThatWantsRematch} wants a rematch!!!
-        </Paper>
-      )}{" "}
       <Snackbar
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "left" }}
         open={showSnackbarMessage}
         onClose={handleSnackbarClose}
         message={"New Game Started!"}
