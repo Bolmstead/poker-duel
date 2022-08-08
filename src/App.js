@@ -66,6 +66,7 @@ const modalStyle = {
 
 function OlmsteadBall() {
   const [deck, setDeck] = useState([]);
+  console.log("🚀 ~ file: App.js ~ line 69 ~ OlmsteadBall ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
   const [playersUsername, setPlayersUsername] = useState(null);
   const [roomName, setRoomName] = useState(null);
@@ -77,7 +78,15 @@ function OlmsteadBall() {
   const [player2Username, setPlayer2Username] = useState(null);
   const [modalVisible, setModalVisible] = useState(true);
   const [player1Cards, setPlayer1Cards] = useState([]);
+  console.log(
+    "🚀 ~ file: App.js ~ line 80 ~ OlmsteadBall ~ player1Cards",
+    player1Cards
+  );
   const [player2Cards, setPlayer2Cards] = useState([]);
+  console.log(
+    "🚀 ~ file: App.js ~ line 82 ~ OlmsteadBall ~ player2Cards",
+    player2Cards
+  );
   const [selectedCard, setSelectedCard] = useState(null);
   const [playersTurn, setPlayersTurn] = useState(1);
   const [player1HandsSolved, setPlayer1HandsSolved] = useState([]);
@@ -86,6 +95,7 @@ function OlmsteadBall() {
 
   const [winner, setWinner] = useState(null);
   const [userLeftAlert, setUserLeftAlert] = useState(false);
+  const [userThatWantsRematch, setUserThatWantsRematch] = useState(null);
 
   const unshuffledDeck = [
     "Ad",
@@ -147,6 +157,16 @@ function OlmsteadBall() {
       startGame(data.username, data.roomName);
     });
 
+    socket.on("rematch requested", (data) => {
+      console.log("rematch requested!!!", data);
+
+      if (data.requestedBy === userThatWantsRematch) {
+        return;
+      } else {
+        startGame(player2Username, roomName);
+      }
+    });
+
     socket.on("game started", (data) => {
       let {
         deck,
@@ -189,15 +209,19 @@ function OlmsteadBall() {
         winner,
       } = data;
       setDeck(deck);
+      console.log(deck);
       setPlayer1Cards(player1Cards);
+      console.log(player1Cards);
+
       setPlayer2Cards(player2Cards);
+      console.log(player2Cards);
+
       setSelectedCard(null);
       setPlayersTurn(null);
       setPlayer1HandsSolved(player1HandsSolved);
       setPlayer2HandsSolved(player2HandsSolved);
       setWinner(winner);
       setWinners(winners);
-      setSelectedCard(null);
     });
     socket.on("user has left", (data) => {
       console.log("user has left!");
@@ -250,11 +274,13 @@ function OlmsteadBall() {
 
   function startGame(p2Username, rmName) {
     console.log("rmName", rmName);
-    let tempPlayersTurn = Math.random() < 0.5 ? 1 : 2;
-    setPlayersTurn(tempPlayersTurn);
+
     setPlayer1HandsSolved([]);
     setPlayer2HandsSolved([]);
     setWinners([]);
+    setUserThatWantsRematch(null);
+    let tempPlayersTurn = Math.random() < 0.5 ? 1 : 2;
+    setPlayersTurn(tempPlayersTurn);
     let newDeck = unshuffledDeck;
     let tempPlayer1Hand = [];
     let tempPlayer2Hand = [];
@@ -285,9 +311,15 @@ function OlmsteadBall() {
     setPlayer1Cards(tempPlayer1Hand);
     setPlayer2Cards(tempPlayer2Hand);
     setSelectedCard(newCard);
-    setPlayer1Username(playersUsername);
-    setPlayer2Username(p2Username);
-    setRoomName(rmName);
+    if (!player1Username) {
+      setPlayer1Username(playersUsername);
+    }
+    if (!player2Username) {
+      setPlayer2Username(p2Username);
+    }
+    if (!roomName) {
+      setRoomName(rmName);
+    }
 
     let ar = rmName.split("");
     ar.splice(0, 6);
@@ -307,16 +339,59 @@ function OlmsteadBall() {
     });
   }
 
+  function rematch() {
+    if (!userThatWantsRematch) {
+      setUserThatWantsRematch(playersUsername);
+      socket.emit("rematch requested", {
+        roomName: roomName,
+        requestedBy: playersUsername,
+      });
+    } else if (userThatWantsRematch === playersUsername) {
+      return;
+    } else {
+      socket.emit("rematch requested", {
+        roomName: roomName,
+        requestedBy: playersUsername,
+      });
+    }
+  }
+
+  function completeGameShortcut() {
+    console.log("complete game");
+    let p1CardsFinal = [
+      ["Jc", "Qc", "10s", "4s", "9d"],
+      ["Kd", "5d", "6c", "9s", "3h"],
+      ["4h", "Jh", "5s", "Ad", "10d"],
+      ["3d", "3s", "7d", "3c", "2d"],
+      ["10c", "5h", "10h", "Kh", "8h"],
+    ];
+    let p2CardsFinal = [
+      ["5c", "6h", "4c", "8s", "6d"],
+      ["7c", "6s", "Jd", "4d", "Qs"],
+      ["9h", "As", "Kc", "Ah", "Qh"],
+      ["8d", "7s", "7h", "2c", "9c"],
+      ["8c", "Ac", "Js", "2h"],
+    ];
+    let deckFinal = ["Ks"];
+    let selCardFinal = "2s";
+
+    setDeck(deckFinal);
+    setPlayer1Cards(p1CardsFinal);
+    setPlayer2Cards(p2CardsFinal);
+    setSelectedCard(selCardFinal);
+    setPlayersTurn(2);
+  }
+
   function placeCard(card, playerSide, handNumber) {
     console.log(
       "🚀 ~ file: App.js ~ line 307 ~ placeCard ~ handNumber",
       handNumber
     );
 
-    let playerThatPlayed = playersUsername === player1Username ? 1 : 2
+    let playerThatPlayed = playersUsername === player1Username ? 1 : 2;
 
     if (playersTurn !== playerThatPlayed) {
-      return
+      return;
     }
 
     if (playersTurn !== playerSide) {
@@ -508,7 +583,7 @@ function OlmsteadBall() {
             </div>
             <Button
               style={{ width: "100%" }}
-              onClick={() => setUserLeftAlert(false)}
+              onClick={() => window.location.reload(false)}
             >
               Play Again?
             </Button>
@@ -632,9 +707,17 @@ function OlmsteadBall() {
           </span>
         ) : null}
       </div>
-
       {playersUsername === player1Username ? (
-        <Box sx={{ width: "100%", minHeight: "200px" }}>
+        <Box
+          style={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: "200px",
+          }}
+        >
+          {" "}
           {player2Cards.length > 0 ? (
             <Grid
               container
@@ -646,22 +729,6 @@ function OlmsteadBall() {
               // style={{ backgroundColor: "purple" }}
             >
               <Grid item xs={2}>
-                {player2Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 2, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
                 {player2HandsSolved[0] ? (
                   <Paper
                     variant="outlined"
@@ -683,12 +750,10 @@ function OlmsteadBall() {
                     {player2HandsSolved[0].descr}
                   </Paper>
                 ) : null}
-              </Grid>
-              <Grid item xs={2}>
-                {player2Cards[1].map((card) => (
+                {player2Cards[0].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 2, 1)}
+                    onClick={() => placeCard(card, 2, 0)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -701,6 +766,8 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
+              </Grid>
+              <Grid item xs={2}>
                 {player2HandsSolved[1] ? (
                   <Paper
                     variant="outlined"
@@ -722,12 +789,10 @@ function OlmsteadBall() {
                     {player2HandsSolved[1].descr}
                   </Paper>
                 ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[2].map((card) => (
+                {player2Cards[1].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 2, 2)}
+                    onClick={() => placeCard(card, 2, 1)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -740,6 +805,8 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
+              </Grid>{" "}
+              <Grid item xs={2}>
                 {player2HandsSolved[2] ? (
                   <Paper
                     variant="outlined"
@@ -761,12 +828,10 @@ function OlmsteadBall() {
                     {player2HandsSolved[2].descr}
                   </Paper>
                 ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[3].map((card) => (
+                {player2Cards[2].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 2, 3)}
+                    onClick={() => placeCard(card, 2, 2)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -779,6 +844,8 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
+              </Grid>{" "}
+              <Grid item xs={2}>
                 {player2HandsSolved[3] ? (
                   <Paper
                     variant="outlined"
@@ -800,12 +867,10 @@ function OlmsteadBall() {
                     {player2HandsSolved[3].descr}
                   </Paper>
                 ) : null}
-              </Grid>{" "}
-              <Grid item xs={2}>
-                {player2Cards[4].map((card) => (
+                {player2Cards[3].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 2, 4)}
+                    onClick={() => placeCard(card, 2, 3)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -818,6 +883,8 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
+              </Grid>{" "}
+              <Grid item xs={2}>
                 {player2HandsSolved[4] ? (
                   <Paper
                     variant="outlined"
@@ -839,6 +906,22 @@ function OlmsteadBall() {
                     {player2HandsSolved[4].descr}
                   </Paper>
                 ) : null}
+                {player2Cards[4].map((card) => (
+                  <Paper
+                    variant="outlined"
+                    onClick={() => placeCard(card, 2, 4)}
+                    style={{
+                      display: "flex",
+                      margin: "5px",
+                      backgroundColor: "lightgray",
+                      height: "50px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {card}
+                  </Paper>
+                ))}
               </Grid>
             </Grid>
           ) : null}
@@ -1060,7 +1143,6 @@ function OlmsteadBall() {
           ) : null}
         </Box>
       )}
-
       {playersUsername === player2Username ? (
         <Box sx={{ width: "100%", minHeight: "200px" }}>
           {player2Cards.length > 0 ? (
@@ -1272,15 +1354,7 @@ function OlmsteadBall() {
           ) : null}
         </Box>
       ) : (
-        <Box
-          style={{
-            width: "100%",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            minHeight: "200px",
-          }}
-        >
+        <Box sx={{ width: "100%", minHeight: "200px" }}>
           {player1Cards.length > 0 ? (
             <Grid
               container
@@ -1290,6 +1364,22 @@ function OlmsteadBall() {
               alignItems="center"
             >
               <Grid item xs={2} className="a-player-deck">
+                {player1Cards[0].map((card) => (
+                  <Paper
+                    variant="outlined"
+                    onClick={() => placeCard(card, 1, 0)}
+                    style={{
+                      display: "flex",
+                      margin: "5px",
+                      backgroundColor: "lightgray",
+                      height: "50px",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {card}
+                  </Paper>
+                ))}
                 {player1HandsSolved[0] ? (
                   <Paper
                     variant="outlined"
@@ -1311,10 +1401,12 @@ function OlmsteadBall() {
                     {player1HandsSolved[0].descr}
                   </Paper>
                 ) : null}
-                {player1Cards[0].map((card) => (
+              </Grid>
+              <Grid item xs={2}>
+                {player1Cards[1].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 1, 0)}
+                    onClick={() => placeCard(card, 1, 1)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -1327,8 +1419,6 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
-              </Grid>
-              <Grid item xs={2}>
                 {player1HandsSolved[1] ? (
                   <Paper
                     variant="outlined"
@@ -1350,10 +1440,12 @@ function OlmsteadBall() {
                     {player1HandsSolved[1].descr}
                   </Paper>
                 ) : null}
-                {player1Cards[1].map((card) => (
+              </Grid>{" "}
+              <Grid item xs={2}>
+                {player1Cards[2].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 1, 1)}
+                    onClick={() => placeCard(card, 1, 2)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -1366,8 +1458,6 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
                 {player1HandsSolved[2] ? (
                   <Paper
                     variant="outlined"
@@ -1389,10 +1479,12 @@ function OlmsteadBall() {
                     {player1HandsSolved[2].descr}
                   </Paper>
                 ) : null}
-                {player1Cards[2].map((card) => (
+              </Grid>{" "}
+              <Grid item xs={2}>
+                {player1Cards[3].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 1, 2)}
+                    onClick={() => placeCard(card, 1, 3)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -1405,8 +1497,6 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
                 {player1HandsSolved[3] ? (
                   <Paper
                     variant="outlined"
@@ -1428,10 +1518,12 @@ function OlmsteadBall() {
                     {player1HandsSolved[3].descr}
                   </Paper>
                 ) : null}
-                {player1Cards[3].map((card) => (
+              </Grid>{" "}
+              <Grid item xs={2}>
+                {player1Cards[4].map((card) => (
                   <Paper
                     variant="outlined"
-                    onClick={() => placeCard(card, 1, 3)}
+                    onClick={() => placeCard(card, 1, 4)}
                     style={{
                       display: "flex",
                       margin: "5px",
@@ -1444,8 +1536,6 @@ function OlmsteadBall() {
                     {card}
                   </Paper>
                 ))}
-              </Grid>{" "}
-              <Grid item xs={2}>
                 {player1HandsSolved[4] ? (
                   <Paper
                     variant="outlined"
@@ -1467,29 +1557,12 @@ function OlmsteadBall() {
                     {player1HandsSolved[4].descr}
                   </Paper>
                 ) : null}
-                {player1Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    {card}
-                  </Paper>
-                ))}
               </Grid>
             </Grid>
           ) : null}
         </Box>
       )}
-
-      {deck.length > 0 && selectedCard ? (
+      {deck.length > 0 && selectedCard && !winner ? (
         <Paper
           variant="outlined"
           style={{
@@ -1505,6 +1578,36 @@ function OlmsteadBall() {
           {selectedCard}
         </Paper>
       ) : null}
+      {winner ? (
+        <Button
+          style={{
+            minWidth: "150px",
+            backgroundColor: "lightgray",
+            color: "black",
+            marginTop: "50px",
+          }}
+          onClick={() => rematch()}
+        >
+          Rematch?
+        </Button>
+      ) : null}
+      {userThatWantsRematch && (
+        <Paper
+          variant="outlined"
+          style={{
+            display: "flex",
+            margin: "5px",
+            backgroundColor: "green",
+            height: "50px",
+            width: "150px",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          {userThatWantsRematch} wants a rematch!!!
+        </Paper>
+      )}{" "}
+      <Button onClick={() => completeGameShortcut()}>Complete Game</Button>
     </Container>
   );
 }
