@@ -3,6 +3,9 @@ import React, { useState, useEffect } from "react";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
+import Alert from "@mui/material/Alert";
+
+import Snackbar from "@mui/material/Snackbar";
 
 import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
@@ -69,6 +72,8 @@ function OlmsteadBall() {
   console.log("🚀 ~ file: App.js ~ line 69 ~ OlmsteadBall ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
   const [playersUsername, setPlayersUsername] = useState(null);
+  const [otherPlayersUsername, setOtherPlayersUsername] = useState(null);
+
   const [roomName, setRoomName] = useState(null);
   const [player1Username, setPlayer1Username] = useState(null);
   console.log(
@@ -94,8 +99,16 @@ function OlmsteadBall() {
   const [winners, setWinners] = useState([]);
 
   const [winner, setWinner] = useState(null);
+  console.log("🚀 ~ file: App.js ~ line 102 ~ OlmsteadBall ~ winner", winner);
   const [userLeftAlert, setUserLeftAlert] = useState(false);
   const [userThatWantsRematch, setUserThatWantsRematch] = useState(null);
+  const [snackBarMessage, setSnackBarMessage] = useState(null);
+  const [showSnackbarMessage, setShowSnackbarMessage] = useState(null);
+
+  console.log(
+    "🚀 ~ file: App.js ~ line 105 ~ OlmsteadBall ~ snackBarMessage",
+    snackBarMessage
+  );
 
   const unshuffledDeck = [
     "Ad",
@@ -159,11 +172,12 @@ function OlmsteadBall() {
 
     socket.on("rematch requested", (data) => {
       console.log("rematch requested!!!", data);
-
-      if (data.requestedBy === userThatWantsRematch) {
-        return;
-      } else {
-        startGame(player2Username, roomName);
+      console.log(
+        "🚀 ~ file: App.js ~ line 99 ~ OlmsteadBall ~ userThatWantsRematch",
+        userThatWantsRematch
+      );
+      if (!userThatWantsRematch) {
+        setUserThatWantsRematch(data.requestedBy);
       }
     });
 
@@ -177,13 +191,29 @@ function OlmsteadBall() {
         player1Username,
         player2Username,
       } = data;
+
+      let tempOtherPlayerUsername;
+
+      if (player1Username === playersUsername) {
+        tempOtherPlayerUsername = player2Username;
+      } else {
+        tempOtherPlayerUsername = player1Username;
+      }
+      setOtherPlayersUsername(tempOtherPlayerUsername);
       setDeck(deck);
+      setWinner(null);
+      setSnackBarMessage(`New game started with ${tempOtherPlayerUsername}!`);
+      setWinners([]);
+      setPlayer1HandsSolved([]);
+      setPlayer2HandsSolved([]);
       setPlayer1Cards(player1Cards);
       setPlayer2Cards(player2Cards);
       setSelectedCard(selectedCard);
       setPlayersTurn(playersTurn);
       setPlayer1Username(player1Username);
       setPlayer2Username(player2Username);
+      setUserThatWantsRematch(null);
+      setShowSnackbarMessage(true);
     });
 
     socket.on("user card played", (data) => {
@@ -271,13 +301,19 @@ function OlmsteadBall() {
 
     return copy;
   }
-
+  function handleSnackbarClose() {
+    setShowSnackbarMessage(false);
+    setTimeout(() => {
+      setSnackBarMessage(null);
+    }, 2000);
+  }
   function startGame(p2Username, rmName) {
     console.log("rmName", rmName);
 
     setPlayer1HandsSolved([]);
     setPlayer2HandsSolved([]);
     setWinners([]);
+    setWinner(null);
     setUserThatWantsRematch(null);
     let tempPlayersTurn = Math.random() < 0.5 ? 1 : 2;
     setPlayersTurn(tempPlayersTurn);
@@ -340,18 +376,16 @@ function OlmsteadBall() {
   }
 
   function rematch() {
-    if (!userThatWantsRematch) {
+    if (userThatWantsRematch) {
+      if (userThatWantsRematch !== playersUsername) {
+        startGame(player2Username, roomName);
+      }
+    } else {
       setUserThatWantsRematch(playersUsername);
       socket.emit("rematch requested", {
         roomName: roomName,
         requestedBy: playersUsername,
-      });
-    } else if (userThatWantsRematch === playersUsername) {
-      return;
-    } else {
-      socket.emit("rematch requested", {
-        roomName: roomName,
-        requestedBy: playersUsername,
+        bothPlayersReady: true,
       });
     }
   }
@@ -1581,14 +1615,18 @@ function OlmsteadBall() {
       {winner ? (
         <Button
           style={{
-            minWidth: "150px",
+            minWidth: "200px",
             backgroundColor: "lightgray",
             color: "black",
             marginTop: "50px",
           }}
           onClick={() => rematch()}
         >
-          Rematch?
+          {userThatWantsRematch
+            ? userThatWantsRematch !== playersUsername
+              ? "Click to accept"
+              : "Rematch?"
+            : "Rematch?"}
         </Button>
       ) : null}
       {userThatWantsRematch && (
@@ -1607,6 +1645,22 @@ function OlmsteadBall() {
           {userThatWantsRematch} wants a rematch!!!
         </Paper>
       )}{" "}
+      <Snackbar
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        open={showSnackbarMessage}
+        onClose={handleSnackbarClose}
+        message={"New Game Started!"}
+        autoHideDuration={5000}
+        key={"snackbar"}
+      >
+        <Alert
+          onClose={handleSnackbarClose}
+          severity="success"
+          style={{ width: "100%" }}
+        >
+          {snackBarMessage}
+        </Alert>
+      </Snackbar>
       <Button onClick={() => completeGameShortcut()}>Complete Game</Button>
     </Container>
   );
