@@ -56,15 +56,15 @@ console.log("🚀 ~ file: App.js ~ line 51 ~ backendUrl", backendUrl);
 
 const socket = io(backendUrl);
 
-const modalStyle = {
+const usernameBox = {
   position: "absolute",
   top: "50%",
   left: "50%",
   transform: "translate(-50%, -50%)",
   width: 400,
-  bgcolor: "background.paper",
   border: "2px solid #000",
-  boxShadow: 24,
+  backgroundColor: "transparent",
+  boxShadow: "none",
   p: 4,
 };
 
@@ -72,6 +72,8 @@ function PlokerGame() {
   const [deck, setDeck] = useState([]);
   console.log("🚀 ~ file: App.js ~ line 69 ~ Game ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
+  const [lookingForGame, setLookingForGame] = useState(false);
+
   const [playersUsername, setPlayersUsername] = useState(null);
   const [otherPlayersUsername, setOtherPlayersUsername] = useState(null);
 
@@ -278,7 +280,7 @@ function PlokerGame() {
     if (enteredUsername.length <= 3) {
       return;
     }
-    setModalVisible(false);
+    setLookingForGame(true);
     setPlayersUsername(enteredUsername);
     socket.emit("join room", enteredUsername);
   }
@@ -603,45 +605,42 @@ function PlokerGame() {
           height: "92vh",
         }}
       >
-        <Modal open={true}>
-          <Box sx={modalStyle}>
-            <div
-              style={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              <Typography id="modal-modal-title" variant="h6" component="h2">
-                User left the game!
-              </Typography>
-            </div>
-            <Button
-              style={{ width: "100%" }}
-              onClick={() => window.location.reload(false)}
-            >
-              Play Again?
-            </Button>
-          </Box>
-        </Modal>
-        {(!player1Username || !player2Username) && enteredUsername ? (
+        <Box sx={usernameBox}>
           <div
             style={{
+              width: "100%",
               display: "flex",
               justifyContent: "center",
-              alignItems: "center",
-              flexDirection: "column",
             }}
           >
-            <CircularProgress
-              disableShrink
-              style={{ marginBottom: "10px", color: "#59Ae57" }}
-            />
-            <Typography variant="h6" comh6onent="h6" style={{ color: "white" }}>
-              Waiting for an opponent...
+            <Typography
+              id="modal-modal-title"
+              style={{ color: "white", marginBottom: "20px" }}
+              variant="h6"
+              component="h2"
+            >
+              {"User left the game :("}
             </Typography>
           </div>
-        ) : null}
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "center",
+            }}
+          >
+            <Button
+              style={{
+                width: "50%",
+                backgroundColor: "#59Ae57",
+                color: "black",
+              }}
+              onClick={() => window.location.reload(false)}
+            >
+              Find a new game?
+            </Button>
+          </div>
+        </Box>
       </Container>
     );
   }
@@ -658,35 +657,61 @@ function PlokerGame() {
           height: "92vh",
         }}
       >
-        <Modal open={modalVisible}>
-          <Box sx={modalStyle}>
-            <div
+        {!lookingForGame && (
+          <Card>
+            <Box sx={usernameBox}>
+              {/* <div
               style={{
                 width: "100%",
                 display: "flex",
                 justifyContent: "center",
               }}
             >
-              <Typography id="modal-modal-title" variant="h6" component="h2">
+              <Typography
+                id="modal-modal-title"
+                style={{ color: "white" }}
+                variant="h6"
+                component="h2"
+              >
                 Username?
               </Typography>
-            </div>
-            <TextField
-              id="username"
-              type="username"
-              style={{ width: "100%" }}
-              onChange={(e) => setEnteredUsername(e.target.value)}
-            />{" "}
-            <Button
-              style={{ width: "100%" }}
-              disabled={!enteredUsername}
-              onClick={submitUsernameAndFindGame}
-            >
-              Find Game
-            </Button>
-          </Box>
-        </Modal>
-        {(!player1Username || !player2Username) && enteredUsername ? (
+            </div> */}
+              <TextField
+                id="username"
+                type="username"
+                style={{
+                  width: "100%",
+                  backgroundColor: "white",
+                  marginBottom: "20px",
+                }}
+                placeholder="Enter a username"
+                onChange={(e) => setEnteredUsername(e.target.value)}
+              />{" "}
+              <div
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Button
+                  style={{
+                    width: "50%",
+                    backgroundColor: "#59Ae57",
+                    color: "black",
+                  }}
+                  disabled={!enteredUsername}
+                  onClick={submitUsernameAndFindGame}
+                >
+                  Find Game
+                </Button>
+              </div>
+            </Box>
+          </Card>
+        )}
+        {(!player1Username || !player2Username) &&
+        enteredUsername &&
+        lookingForGame ? (
           <div
             style={{
               display: "flex",
@@ -775,7 +800,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>
@@ -814,7 +839,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -853,7 +878,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -892,7 +917,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -931,7 +956,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>
@@ -991,7 +1016,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>
@@ -1030,7 +1055,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1069,7 +1094,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1108,7 +1133,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1147,7 +1172,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
               </Grid>
@@ -1181,7 +1206,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[0] ? (
@@ -1220,7 +1245,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[1] ? (
@@ -1259,7 +1284,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[2] ? (
@@ -1298,7 +1323,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[3] ? (
@@ -1337,7 +1362,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[4] ? (
@@ -1389,7 +1414,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[0] ? (
@@ -1428,7 +1453,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[1] ? (
@@ -1467,7 +1492,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[2] ? (
@@ -1506,7 +1531,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[3] ? (
@@ -1545,7 +1570,7 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    {card}
+                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[4] ? (
@@ -1671,7 +1696,7 @@ function PlokerGame() {
             <Button
               style={{
                 minWidth: "200px",
-                backgroundColor: "#F1Bf42",
+                backgroundColor: "#59Ae57",
                 color: "black",
                 marginTop: "10px",
               }}

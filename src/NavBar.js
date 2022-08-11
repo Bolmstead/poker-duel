@@ -81,7 +81,7 @@ export default function NavBar() {
                   vertical: "top",
                   horizontal: "right",
                 }}
-                open={Boolean(anchorEl)}
+                // open={Boolean(anchorEl)}
                 onClose={handleClose}
               >
                 <MenuItem onClick={handleClose}>Profile</MenuItem>
