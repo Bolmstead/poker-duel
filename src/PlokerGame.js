@@ -14,6 +14,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
+import { v4 as uuid } from "uuid";
 
 import {
   values,
@@ -66,6 +67,8 @@ const usernameBox = {
   backgroundColor: "transparent",
   boxShadow: "none",
   p: 4,
+  display: "flex",
+  justifyContent: "center",
 };
 
 function PlokerGame() {
@@ -107,6 +110,7 @@ function PlokerGame() {
   const [userThatWantsRematch, setUserThatWantsRematch] = useState(null);
   const [snackBarMessage, setSnackBarMessage] = useState(null);
   const [showSnackbarMessage, setShowSnackbarMessage] = useState(null);
+  const [showLoginForm, setShowLoginForm] = useState(false);
 
   console.log(
     "🚀 ~ file: App.js ~ line 105 ~ Game ~ snackBarMessage",
@@ -272,6 +276,16 @@ function PlokerGame() {
       setUserLeftAlert(true);
     });
   }, [socket]);
+
+  function joinPrivateGame() {}
+
+  function findRandomGame() {
+    let randomCharacters = uuid();
+    let randomUsername = randomCharacters.substring(0, 10);
+    setLookingForGame(true);
+    setPlayersUsername(randomUsername);
+    socket.emit("join room", randomUsername);
+  }
 
   function submitUsernameAndFindGame() {
     if (!enteredUsername) {
@@ -605,8 +619,9 @@ function PlokerGame() {
           height: "92vh",
         }}
       >
-        <Box sx={usernameBox}>
-          <div
+        <Grid container sx={usernameBox}>
+          <Grid
+            item
             style={{
               width: "100%",
               display: "flex",
@@ -621,8 +636,9 @@ function PlokerGame() {
             >
               {"User left the game :("}
             </Typography>
-          </div>
-          <div
+          </Grid>
+          <Grid
+            item
             style={{
               width: "100%",
               display: "flex",
@@ -639,8 +655,8 @@ function PlokerGame() {
             >
               Find a new game?
             </Button>
-          </div>
-        </Box>
+          </Grid>
+        </Grid>
       </Container>
     );
   }
@@ -657,10 +673,57 @@ function PlokerGame() {
           height: "92vh",
         }}
       >
-        {!lookingForGame && (
+        {showLoginForm ? (
           <Card>
-            <Box sx={usernameBox}>
-              {/* <div
+            <Grid container sx={usernameBox}>
+              <Grid
+                item
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <TextField
+                  id="username"
+                  type="username"
+                  style={{
+                    width: "66%",
+                    backgroundColor: "white",
+                    marginBottom: "20px",
+                  }}
+                  placeholder="Enter a username"
+                  onChange={(e) => setEnteredUsername(e.target.value)}
+                />
+              </Grid>
+              <Grid
+                item
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <Button
+                  style={{
+                    width: "66%",
+                    backgroundColor: "#59Ae57",
+                    color: "black",
+                    marginBottom: "20px",
+                  }}
+                  disabled
+                  // onClick={submitUsernameAndFindGame}
+                >
+                  Login
+                </Button>
+              </Grid>
+            </Grid>
+          </Card>
+        ) : (
+          !lookingForGame && (
+            <Card>
+              <Grid container sx={usernameBox}>
+                {/* <div
               style={{
                 width: "100%",
                 display: "flex",
@@ -676,42 +739,76 @@ function PlokerGame() {
                 Username?
               </Typography>
             </div> */}
-              <TextField
-                id="username"
-                type="username"
-                style={{
-                  width: "100%",
-                  backgroundColor: "white",
-                  marginBottom: "20px",
-                }}
-                placeholder="Enter a username"
-                onChange={(e) => setEnteredUsername(e.target.value)}
-              />{" "}
-              <div
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                }}
-              >
-                <Button
+                <Grid
+                  item
                   style={{
-                    width: "50%",
-                    backgroundColor: "#59Ae57",
-                    color: "black",
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
                   }}
-                  disabled={!enteredUsername}
-                  onClick={submitUsernameAndFindGame}
                 >
-                  Find Game
-                </Button>
-              </div>
-            </Box>
-          </Card>
+                  <Button
+                    style={{
+                      width: "70%",
+                      backgroundColor: "#59Ae57",
+                      color: "black",
+                      marginBottom: "20px",
+                    }}
+                    onClick={joinPrivateGame}
+                  >
+                    Join Private Game
+                  </Button>
+                </Grid>
+                <Grid
+                  item
+                  style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Button
+                    style={{
+                      width: "70%",
+                      backgroundColor: "#59Ae57",
+                      color: "black",
+                      marginBottom: "20px",
+                    }}
+                    onClick={findRandomGame}
+                  >
+                    Find Random Game
+                  </Button>
+                </Grid>
+                <Grid
+                  item
+                  style={{
+                    width: "70%",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "50%",
+                      color: "white",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <span onClick={setShowLoginForm} disabled>
+                      Login{" "}
+                    </span>
+                    <span>/</span>
+                    <span onClick={setShowLoginForm} disabled>
+                      {" "}
+                      Register
+                    </span>
+                  </div>
+                </Grid>
+              </Grid>
+            </Card>
+          )
         )}
-        {(!player1Username || !player2Username) &&
-        enteredUsername &&
-        lookingForGame ? (
+        {lookingForGame ? (
           <div
             style={{
               display: "flex",
@@ -800,7 +897,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>
@@ -839,7 +939,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -878,7 +981,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -917,7 +1023,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -956,7 +1065,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>
@@ -1016,7 +1128,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>
@@ -1055,7 +1170,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1094,7 +1212,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1133,7 +1254,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>{" "}
@@ -1172,7 +1296,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
               </Grid>
@@ -1206,7 +1333,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[0] ? (
@@ -1245,7 +1375,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[1] ? (
@@ -1284,7 +1417,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[2] ? (
@@ -1323,7 +1459,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[3] ? (
@@ -1362,7 +1501,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player2HandsSolved[4] ? (
@@ -1414,7 +1556,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[0] ? (
@@ -1453,7 +1598,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[1] ? (
@@ -1492,7 +1640,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[2] ? (
@@ -1531,7 +1682,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[3] ? (
@@ -1570,7 +1724,10 @@ function PlokerGame() {
                       alignItems: "center",
                     }}
                   >
-                    <img style={{height: "50px"}}src={`/playingCards/${card}.png`}></img>
+                    <img
+                      style={{ height: "50px" }}
+                      src={`/playingCards/${card}.png`}
+                    ></img>
                   </Paper>
                 ))}
                 {player1HandsSolved[4] ? (

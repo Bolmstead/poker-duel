@@ -47,7 +47,7 @@ export default function NavBar() {
             aria-label="menu"
             sx={{ mr: 2 }}
           >
-            <MenuIcon />
+            {/* <MenuIcon /> */}
           </IconButton>
 
           <img
@@ -59,7 +59,7 @@ export default function NavBar() {
 
           {auth && (
             <div>
-              <IconButton
+              {/* <IconButton
                 size="large"
                 aria-label="account of current user"
                 aria-controls="menu-appbar"
@@ -86,7 +86,7 @@ export default function NavBar() {
               >
                 <MenuItem onClick={handleClose}>Profile</MenuItem>
                 <MenuItem onClick={handleClose}>My account</MenuItem>
-              </Menu>
+              </Menu> */}
             </div>
           )}
         </Toolbar>
