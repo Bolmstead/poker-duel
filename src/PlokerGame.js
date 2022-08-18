@@ -51,7 +51,7 @@ console.log("process.env", process.env);
 let backendUrl =
   process.env.REACT_APP_ENV === "production"
     ? "https://olmstead-ball-backend.herokuapp.com/"
-    : "http://localhost:3001/";
+    : "http://localhost:3000/";
 
 console.log("🚀 ~ file: App.js ~ line 51 ~ backendUrl", backendUrl);
 
