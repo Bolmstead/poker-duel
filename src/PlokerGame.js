@@ -4,7 +4,7 @@ import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
-
+import Popover from "@mui/material/Popover";
 import Snackbar from "@mui/material/Snackbar";
 
 import Typography from "@mui/material/Typography";
@@ -15,6 +15,7 @@ import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
 import Modal from "@mui/material/Modal";
 import { v4 as uuid } from "uuid";
+import API from "./api/index";
 
 import {
   values,
@@ -75,6 +76,16 @@ function PlokerGame() {
   const [deck, setDeck] = useState([]);
   console.log("🚀 ~ file: App.js ~ line 69 ~ Game ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
+  console.log(
+    "🚀 ~ file: PlokerGame.js ~ line 78 ~ PlokerGame ~ enteredUsername",
+    enteredUsername
+  );
+  const [enteredPassword, setEnteredPassword] = useState(null);
+  console.log(
+    "🚀 ~ file: PlokerGame.js ~ line 80 ~ PlokerGame ~ enteredPassword",
+    enteredPassword
+  );
+
   const [lookingForGame, setLookingForGame] = useState(false);
 
   const [playersUsername, setPlayersUsername] = useState(null);
@@ -82,22 +93,13 @@ function PlokerGame() {
 
   const [roomName, setRoomName] = useState(null);
   const [player1Username, setPlayer1Username] = useState(null);
-  console.log(
-    "🚀 ~ file: App.js ~ line 73 ~ Game ~ player1Username",
-    player1Username
-  );
+
   const [player2Username, setPlayer2Username] = useState(null);
   const [modalVisible, setModalVisible] = useState(true);
   const [player1Cards, setPlayer1Cards] = useState([]);
-  console.log(
-    "🚀 ~ file: App.js ~ line 80 ~ Game ~ player1Cards",
-    player1Cards
-  );
+
   const [player2Cards, setPlayer2Cards] = useState([]);
-  console.log(
-    "🚀 ~ file: App.js ~ line 82 ~ Game ~ player2Cards",
-    player2Cards
-  );
+
   const [selectedCard, setSelectedCard] = useState(null);
   const [playersTurn, setPlayersTurn] = useState(1);
   const [player1HandsSolved, setPlayer1HandsSolved] = useState([]);
@@ -105,17 +107,12 @@ function PlokerGame() {
   const [winners, setWinners] = useState([]);
 
   const [winner, setWinner] = useState(null);
-  console.log("🚀 ~ file: App.js ~ line 102 ~ Game ~ winner", winner);
   const [userLeftAlert, setUserLeftAlert] = useState(false);
   const [userThatWantsRematch, setUserThatWantsRematch] = useState(null);
   const [snackBarMessage, setSnackBarMessage] = useState(null);
   const [showSnackbarMessage, setShowSnackbarMessage] = useState(null);
   const [showLoginForm, setShowLoginForm] = useState(false);
-
-  console.log(
-    "🚀 ~ file: App.js ~ line 105 ~ Game ~ snackBarMessage",
-    snackBarMessage
-  );
+  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   const unshuffledDeck = [
     "Ad",
@@ -173,6 +170,17 @@ function PlokerGame() {
   ];
 
   useEffect(() => {
+    async function testAPICall() {
+      try {
+        let result = await API.testCall();
+        console.log("result", result);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    testAPICall();
+
     socket.on("other_player_joined", (data) => {
       startGame(data.username, data.roomName);
     });
@@ -324,6 +332,17 @@ function PlokerGame() {
       setSnackBarMessage(null);
     }, 2000);
   }
+  async function registerOrLoginUser() {
+    if (showLoginForm) {
+    }
+  }
+  async function goBackToMainMenu() {
+    setShowLoginForm(false);
+    setShowRegisterForm(false);
+    setPlayer1Username(null);
+    setPlayer2Username(null);
+  }
+
   function startGame(p2Username, rmName) {
     console.log("rmName", rmName);
 
@@ -392,6 +411,23 @@ function PlokerGame() {
     });
   }
 
+  async function testAPICall() {
+    try {
+      let result = await API.testCall();
+      console.log("result", result);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  function showForm(str) {
+    if (str === "login") {
+      setShowLoginForm(true);
+    } else if (str === "register") {
+      setShowRegisterForm(true);
+    }
+  }
+
   function rematch() {
     if (userThatWantsRematch) {
       if (userThatWantsRematch !== playersUsername) {
@@ -434,6 +470,11 @@ function PlokerGame() {
   }
 
   function placeCard(card, playerSide, handNumber) {
+    let result = testAPICall();
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 474 ~ placeCard ~ result",
+      result
+    );
     console.log(
       "🚀 ~ file: App.js ~ line 307 ~ placeCard ~ handNumber",
       handNumber
@@ -673,7 +714,7 @@ function PlokerGame() {
           height: "92vh",
         }}
       >
-        {showLoginForm ? (
+        {showLoginForm || showRegisterForm ? (
           <Card>
             <Grid container sx={usernameBox}>
               <Grid
@@ -692,7 +733,8 @@ function PlokerGame() {
                     backgroundColor: "white",
                     marginBottom: "20px",
                   }}
-                  placeholder="Enter a username"
+                  placeholder="Username"
+                  size="small"
                   onChange={(e) => setEnteredUsername(e.target.value)}
                 />
               </Grid>
@@ -704,18 +746,57 @@ function PlokerGame() {
                   justifyContent: "center",
                 }}
               >
-                <Button
+                <TextField
+                  id="password"
+                  type="password"
                   style={{
                     width: "66%",
+                    backgroundColor: "white",
+                    marginBottom: "20px",
+                  }}
+                  placeholder="Password"
+                  onChange={(e) => setEnteredPassword(e.target.value)}
+                  size="small"
+                />
+              </Grid>
+              <Grid
+                item
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                {" "}
+                <Button
+                  style={{
+                    width: "70%",
                     backgroundColor: "#59Ae57",
                     color: "black",
                     marginBottom: "20px",
                   }}
-                  disabled
-                  // onClick={submitUsernameAndFindGame}
+                  onClick={registerOrLoginUser}
                 >
-                  Login
+                  {showLoginForm && !showRegisterForm ? "Login" : null}
+                  {!showLoginForm && showRegisterForm ? "Register" : null}
                 </Button>
+              </Grid>
+              <Grid
+                item
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  color: "white",
+                }}
+              >
+                <span
+                  onClick={goBackToMainMenu}
+                  style={{ cursor: "pointer" }}
+                  disabled
+                >
+                  Go Back{" "}
+                </span>
               </Grid>
             </Grid>
           </Card>
@@ -794,11 +875,19 @@ function PlokerGame() {
                       marginBottom: "20px",
                     }}
                   >
-                    <span onClick={setShowLoginForm} disabled>
+                    <span
+                      onClick={() => showForm("login")}
+                      style={{ cursor: "pointer" }}
+                      disabled
+                    >
                       Login{" "}
                     </span>
                     <span>/</span>
-                    <span onClick={setShowLoginForm} disabled>
+                    <span
+                      onClick={() => showForm("register")}
+                      style={{ cursor: "pointer" }}
+                      disabled
+                    >
                       {" "}
                       Register
                     </span>
@@ -862,7 +951,17 @@ function PlokerGame() {
 
               // style={{ backgroundColor: "purple" }}
             >
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2HandsSolved[0] ? (
                   <Paper
                     variant="outlined"
@@ -885,26 +984,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player2Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2HandsSolved[1] ? (
                   <Paper
                     variant="outlined"
@@ -927,26 +1024,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player2Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2HandsSolved[2] ? (
                   <Paper
                     variant="outlined"
@@ -969,26 +1064,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player2Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2HandsSolved[3] ? (
                   <Paper
                     variant="outlined"
@@ -1011,26 +1104,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player2Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2HandsSolved[4] ? (
                   <Paper
                     variant="outlined"
@@ -1053,23 +1144,11 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player2Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>
             </Grid>
@@ -1116,26 +1195,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player1Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1HandsSolved[1] ? (
                   <Paper
                     variant="outlined"
@@ -1158,26 +1235,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player1Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1HandsSolved[2] ? (
                   <Paper
                     variant="outlined"
@@ -1200,26 +1275,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player1Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1HandsSolved[3] ? (
                   <Paper
                     variant="outlined"
@@ -1242,26 +1315,24 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player1Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
-                    onClick={() => placeCard(card, 1, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
+                    onClick={() => placeCard(card, 1, 2)}
+                  ></img>
                 ))}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1HandsSolved[4] ? (
                   <Paper
                     variant="outlined"
@@ -1284,23 +1355,11 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
                 {player1Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
               </Grid>
             </Grid>
@@ -1319,25 +1378,23 @@ function PlokerGame() {
 
               // style={{ backgroundColor: "purple" }}
             >
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player2HandsSolved[0] ? (
                   <Paper
@@ -1361,25 +1418,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player2HandsSolved[1] ? (
                   <Paper
@@ -1403,25 +1458,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player2HandsSolved[2] ? (
                   <Paper
@@ -1445,25 +1498,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player2HandsSolved[3] ? (
                   <Paper
@@ -1487,25 +1538,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player2Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 2, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player2HandsSolved[4] ? (
                   <Paper
@@ -1544,23 +1593,11 @@ function PlokerGame() {
             >
               <Grid item xs={2} className="a-player-deck">
                 {player1Cards[0].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 0)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player1HandsSolved[0] ? (
                   <Paper
@@ -1584,25 +1621,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1Cards[1].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 1)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player1HandsSolved[1] ? (
                   <Paper
@@ -1626,25 +1661,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1Cards[2].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 2)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player1HandsSolved[2] ? (
                   <Paper
@@ -1668,25 +1701,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1Cards[3].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 3)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player1HandsSolved[3] ? (
                   <Paper
@@ -1710,25 +1741,23 @@ function PlokerGame() {
                   </Paper>
                 ) : null}
               </Grid>{" "}
-              <Grid item xs={2}>
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1Cards[4].map((card) => (
-                  <Paper
-                    variant="outlined"
+                  <img
+                    style={{ height: "100px" }}
+                    src={`/playingCards/${card}.png`}
                     onClick={() => placeCard(card, 1, 4)}
-                    style={{
-                      display: "flex",
-                      margin: "5px",
-                      backgroundColor: "lightgray",
-                      height: "50px",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <img
-                      style={{ height: "50px" }}
-                      src={`/playingCards/${card}.png`}
-                    ></img>
-                  </Paper>
+                  ></img>
                 ))}
                 {player1HandsSolved[4] ? (
                   <Paper
@@ -1786,20 +1815,10 @@ function PlokerGame() {
         ) : null}
       </div>
       {deck.length > 0 && selectedCard && !winner ? (
-        <Paper
-          variant="outlined"
-          style={{
-            display: "flex",
-            margin: "5px",
-            backgroundColor: "lightgray",
-            height: "50px",
-            width: "150px",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          {selectedCard}
-        </Paper>
+        <img
+          style={{ height: "100px" }}
+          src={`/playingCards/${selectedCard}.png`}
+        />
       ) : null}
       {userThatWantsRematch ? (
         userThatWantsRematch === playersUsername ? (
@@ -1891,7 +1910,7 @@ function PlokerGame() {
           {snackBarMessage}
         </Alert>
       </Snackbar>
-      <Button onClick={() => completeGameShortcut()}>Complete Game</Button>
+      {/* <Button onClick={() => completeGameShortcut()}>Complete Game</Button> */}
     </Container>
   );
 }
