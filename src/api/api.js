@@ -7,7 +7,6 @@ function createApi() {
         ? "https://olmstead-ball-backend.herokuapp.com/"
         : "http://localhost:3000",
     responseType: "json",
-
   });
 
   // const setAuthHeader = () => {
@@ -20,17 +19,22 @@ function createApi() {
   //   ] = `${tokenType} ${accessToken}`;
   // };
 
-  const login = async (username, password, loginToken) => {
-    const { data } = await apiClient.post("/auth/login", {
+  const login = async (username, password) => {
+  console.log("🚀 ~ file: api.js ~ line 23 ~ login ~ username, password", username, password)
+    const { data } = await apiClient.post("/users/login", {
       username,
       password,
-      loginToken,
     });
+    console.log("🚀 ~ file: api.js ~ line 27 ~ login ~ data", data);
     return data;
   };
 
-  const register = async (fields) => {
-    const { data } = await apiClient.post("auth/register", fields);
+  const register = async (username, password) => {
+    const { data } = await apiClient.post("users/register", {
+      username,
+      password,
+    });
+    console.log("🚀 ~ file: api.js ~ line 36 ~ register ~ data", data);
     return data;
   };
 

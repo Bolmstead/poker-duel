@@ -73,6 +73,7 @@ const usernameBox = {
 };
 
 function PlokerGame() {
+  const loggedInUsername = localStorage.getItem("plokerUsername");
   const [deck, setDeck] = useState([]);
   console.log("🚀 ~ file: App.js ~ line 69 ~ Game ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
@@ -89,6 +90,7 @@ function PlokerGame() {
   const [lookingForGame, setLookingForGame] = useState(false);
 
   const [playersUsername, setPlayersUsername] = useState(null);
+
   const [otherPlayersUsername, setOtherPlayersUsername] = useState(null);
 
   const [roomName, setRoomName] = useState(null);
@@ -111,6 +113,7 @@ function PlokerGame() {
   const [userThatWantsRematch, setUserThatWantsRematch] = useState(null);
   const [snackBarMessage, setSnackBarMessage] = useState(null);
   const [showSnackbarMessage, setShowSnackbarMessage] = useState(null);
+  const [snackBarMessageType, setSnackBarMessageType] = useState("success");
   const [showLoginForm, setShowLoginForm] = useState(false);
   const [showRegisterForm, setShowRegisterForm] = useState(false);
 
@@ -170,17 +173,6 @@ function PlokerGame() {
   ];
 
   useEffect(() => {
-    async function testAPICall() {
-      try {
-        let result = await API.testCall();
-        console.log("result", result);
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    testAPICall();
-
     socket.on("other_player_joined", (data) => {
       startGame(data.username, data.roomName);
     });
@@ -334,6 +326,46 @@ function PlokerGame() {
   }
   async function registerOrLoginUser() {
     if (showLoginForm) {
+      let loginResult = await API.login(enteredUsername, enteredPassword);
+      console.log(
+        "🚀 ~ file: PlokerGame.js ~ line 331 ~ registerOrLoginUser ~ loginResult",
+        loginResult
+      );
+
+      if (loginResult.status === "success" && loginResult.user) {
+        localStorage.setItem("plokerUsername", loginResult.newUser.username);
+        setSnackBarMessageType("success");
+        setSnackBarMessage(`Welcome ${loginResult.user.username}!`);
+        setShowSnackbarMessage(true);
+      } else if (loginResult.status === "error" && loginResult.message) {
+        console.log(`loginResult.status === "error"`);
+        setSnackBarMessageType("error");
+        setSnackBarMessage(loginResult.message);
+        setShowSnackbarMessage(true);
+      } else {
+        setSnackBarMessageType("error");
+        setSnackBarMessage("error");
+        setShowSnackbarMessage(true);
+      }
+      setShowLoginForm(false);
+    } else if (showRegisterForm) {
+      let registerResult = await API.register(enteredUsername, enteredPassword);
+      console.log(
+        "🚀 ~ file: PlokerGame.js ~ line 350 ~ registerOrLoginUser ~ registerResult",
+        registerResult
+      );
+
+      if (registerResult.status === "success") {
+        localStorage.setItem("username", registerResult.newUser.username);
+        setSnackBarMessageType("success");
+        setSnackBarMessage(`Welcome ${registerResult.newUser.username}!`);
+        setShowSnackbarMessage(true);
+      } else if (registerResult.status === "error") {
+        setSnackBarMessageType("error");
+        setSnackBarMessage(registerResult.error);
+        setShowSnackbarMessage(true);
+      }
+      setShowRegisterForm(false);
     }
   }
   async function goBackToMainMenu() {
@@ -411,16 +443,8 @@ function PlokerGame() {
     });
   }
 
-  async function testAPICall() {
-    try {
-      let result = await API.testCall();
-      console.log("result", result);
-    } catch (err) {
-      console.log(err);
-    }
-  }
-
   function showForm(str) {
+    setShowSnackbarMessage(false);
     if (str === "login") {
       setShowLoginForm(true);
     } else if (str === "register") {
@@ -470,11 +494,6 @@ function PlokerGame() {
   }
 
   function placeCard(card, playerSide, handNumber) {
-    let result = testAPICall();
-    console.log(
-      "🚀 ~ file: PlokerGame.js ~ line 474 ~ placeCard ~ result",
-      result
-    );
     console.log(
       "🚀 ~ file: App.js ~ line 307 ~ placeCard ~ handNumber",
       handNumber
@@ -916,6 +935,21 @@ function PlokerGame() {
             </Typography>
           </div>
         ) : null}
+        <Snackbar
+          anchorOrigin={{ vertical: "top", horizontal: "left" }}
+          open={showSnackbarMessage}
+          onClose={handleSnackbarClose}
+          autoHideDuration={5000}
+          key={"snackbar"}
+        >
+          <Alert
+            onClose={handleSnackbarClose}
+            severity={snackBarMessageType}
+            style={{ width: "100%" }}
+          >
+            {snackBarMessage}
+          </Alert>
+        </Snackbar>
       </Container>
     );
   }
@@ -1836,7 +1870,8 @@ function PlokerGame() {
         ) : null}
       </div>
       {deck.length > 0 && selectedCard && !winner ? (
-        playersTurn === 1 && playersUsername === player1Username ? (
+        (playersTurn === 1 && playersUsername === player1Username) ||
+        (playersTurn === 2 && playersUsername === player2Username) ? (
           <img
             style={{ height: "100px" }}
             src={`/playingCards/${selectedCard}.png`}
@@ -1849,7 +1884,8 @@ function PlokerGame() {
         )
       ) : null}
       {deck.length > 0 && selectedCard && !winner ? (
-        playersTurn === 1 && playersUsername === player1Username ? null : (
+        (playersTurn === 1 && playersUsername === player1Username) ||
+        (playersTurn === 2 && playersUsername === player2Username) ? null : (
           <span style={{ color: "white", opacity: "50%" }}>Your next card</span>
         )
       ) : null}
