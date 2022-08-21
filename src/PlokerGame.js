@@ -958,9 +958,9 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
-
                   alignItems: "center",
                 }}
+                className="firstRow!!"
               >
                 {player2HandsSolved[0] ? (
                   <Paper
@@ -1172,7 +1172,16 @@ function PlokerGame() {
               justifyContent="center"
               alignItems="center"
             >
-              <Grid item xs={2} className="a-player-deck">
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
                 {player1HandsSolved[0] ? (
                   <Paper
                     variant="outlined"
@@ -1591,7 +1600,17 @@ function PlokerGame() {
               justifyContent="center"
               alignItems="center"
             >
-              <Grid item xs={2} className="a-player-deck">
+              <Grid
+                item
+                xs={2}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  flexDirection: "column",
+
+                  alignItems: "center",
+                }}
+              >
                 {player1Cards[0].map((card) => (
                   <img
                     style={{ height: "100px" }}

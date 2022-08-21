@@ -84,7 +84,4 @@
   float: left;
 }
 
-.a-player-deck {
-  display: "flex";
-  flex-direction: row-reverse;
-}
+
