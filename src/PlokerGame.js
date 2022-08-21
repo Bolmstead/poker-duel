@@ -729,7 +729,7 @@ function PlokerGame() {
                   id="username"
                   type="username"
                   style={{
-                    width: "66%",
+                    width: "70%",
                     backgroundColor: "white",
                     marginBottom: "20px",
                   }}
@@ -747,10 +747,11 @@ function PlokerGame() {
                 }}
               >
                 <TextField
+                  variant="outlined"
                   id="password"
                   type="password"
                   style={{
-                    width: "66%",
+                    width: "70%",
                     backgroundColor: "white",
                     marginBottom: "20px",
                   }}
@@ -820,7 +821,7 @@ function PlokerGame() {
                 Username?
               </Typography>
             </div> */}
-                <Grid
+                {/* <Grid
                   item
                   style={{
                     width: "100%",
@@ -839,7 +840,7 @@ function PlokerGame() {
                   >
                     Join Private Game
                   </Button>
-                </Grid>
+                </Grid> */}
                 <Grid
                   item
                   style={{
@@ -959,6 +960,7 @@ function PlokerGame() {
                   justifyContent: "center",
                   flexDirection: "column",
                   alignItems: "center",
+                  height: "100%",
                 }}
                 className="firstRow!!"
               >
@@ -1834,10 +1836,22 @@ function PlokerGame() {
         ) : null}
       </div>
       {deck.length > 0 && selectedCard && !winner ? (
-        <img
-          style={{ height: "100px" }}
-          src={`/playingCards/${selectedCard}.png`}
-        />
+        playersTurn === 1 && playersUsername === player1Username ? (
+          <img
+            style={{ height: "100px" }}
+            src={`/playingCards/${selectedCard}.png`}
+          />
+        ) : (
+          <img
+            style={{ height: "100px", opacity: "50%" }}
+            src={`/playingCards/${deck[deck.length - 1]}.png`}
+          />
+        )
+      ) : null}
+      {deck.length > 0 && selectedCard && !winner ? (
+        playersTurn === 1 && playersUsername === player1Username ? null : (
+          <span style={{ color: "white", opacity: "50%" }}>Your next card</span>
+        )
       ) : null}
       {userThatWantsRematch ? (
         userThatWantsRematch === playersUsername ? (
