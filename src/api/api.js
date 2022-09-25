@@ -5,7 +5,7 @@ function createApi() {
     baseURL:
       process.env.REACT_APP_ENV === "production"
         ? "https://olmstead-ball-backend.herokuapp.com/"
-        : "http://localhost:3000",
+        : "http://localhost:3001",
     responseType: "json",
   });
 

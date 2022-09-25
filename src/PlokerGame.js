@@ -1,60 +1,29 @@
-import "./App.css";
-import React, { useState, useEffect } from "react";
-import Grid from "@mui/material/Grid";
-import Paper from "@mui/material/Paper";
-import Box from "@mui/material/Box";
 import Alert from "@mui/material/Alert";
-import Popover from "@mui/material/Popover";
+import Box from "@mui/material/Box";
+import Grid from "@mui/material/Grid";
 import Snackbar from "@mui/material/Snackbar";
+import React, { useEffect, useState } from "react";
+import "./App.css";
 
-import Typography from "@mui/material/Typography";
 import Card from "@mui/material/Card";
 import CircularProgress from "@mui/material/CircularProgress";
+import Typography from "@mui/material/Typography";
 
 import { TextField } from "@mui/material";
 import Button from "@mui/material/Button";
-import Modal from "@mui/material/Modal";
 import { v4 as uuid } from "uuid";
 import API from "./api/index";
 
-import {
-  values,
-  Card as PokerCard,
-  Hand,
-  StraightFlush,
-  RoyalFlush,
-  WildRoyalFlush,
-  FiveOfAKind,
-  FourOfAKindPairPlus,
-  FourOfAKind,
-  FourWilds,
-  ThreeOfAKindTwoPair,
-  FullHouse,
-  Flush,
-  Straight,
-  TwoThreeOfAKind,
-  ThreeOfAKind,
-  ThreePair,
-  TwoPair,
-  OnePair,
-  HighCard,
-  gameRules,
-  Game,
-} from "./pokerSolver";
+import { Hand } from "./pokerSolver";
 
 import Container from "@mui/material/Container";
-import NavBar from "./NavBar";
 
 import { io } from "socket.io-client";
-
-console.log("process.env", process.env);
 
 let backendUrl =
   process.env.REACT_APP_ENV === "production"
     ? "https://olmstead-ball-backend.herokuapp.com/"
-    : "http://localhost:3000/";
-
-console.log("🚀 ~ file: App.js ~ line 51 ~ backendUrl", backendUrl);
+    : "http://localhost:3001/";
 
 const socket = io(backendUrl);
 
@@ -75,17 +44,9 @@ const usernameBox = {
 function PlokerGame() {
   const loggedInUsername = localStorage.getItem("plokerUsername");
   const [deck, setDeck] = useState([]);
-  console.log("🚀 ~ file: App.js ~ line 69 ~ Game ~ deck", deck);
   const [enteredUsername, setEnteredUsername] = useState(null);
-  console.log(
-    "🚀 ~ file: PlokerGame.js ~ line 78 ~ PlokerGame ~ enteredUsername",
-    enteredUsername
-  );
+
   const [enteredPassword, setEnteredPassword] = useState(null);
-  console.log(
-    "🚀 ~ file: PlokerGame.js ~ line 80 ~ PlokerGame ~ enteredPassword",
-    enteredPassword
-  );
 
   const [lookingForGame, setLookingForGame] = useState(false);
 
@@ -127,7 +88,7 @@ function PlokerGame() {
     "7d",
     "8d",
     "9d",
-    "10d",
+    "Td",
     "Jd",
     "Qd",
     "Kd",
@@ -140,7 +101,7 @@ function PlokerGame() {
     "7c",
     "8c",
     "9c",
-    "10c",
+    "Tc",
     "Jc",
     "Qc",
     "Kc",
@@ -153,7 +114,7 @@ function PlokerGame() {
     "7h",
     "8h",
     "9h",
-    "10h",
+    "Th",
     "Jh",
     "Qh",
     "Kh",
@@ -166,7 +127,7 @@ function PlokerGame() {
     "7s",
     "8s",
     "9s",
-    "10s",
+    "Ts",
     "Js",
     "Qs",
     "Ks",
@@ -178,11 +139,6 @@ function PlokerGame() {
     });
 
     socket.on("rematch requested", (data) => {
-      console.log("rematch requested!!!", data);
-      console.log(
-        "🚀 ~ file: App.js ~ line 99 ~ Game ~ userThatWantsRematch",
-        userThatWantsRematch
-      );
       if (!userThatWantsRematch) {
         setUserThatWantsRematch(data.requestedBy);
       }
@@ -224,7 +180,6 @@ function PlokerGame() {
     });
 
     socket.on("user card played", (data) => {
-      console.log("card played!!!");
       let { deck, player1Cards, player2Cards, selectedCard, playersTurn } =
         data;
       setDeck(deck);
@@ -235,7 +190,6 @@ function PlokerGame() {
     });
 
     socket.on("game finished", (data) => {
-      console.log(data);
       let {
         deck,
         player1Cards,
@@ -246,12 +200,9 @@ function PlokerGame() {
         winner,
       } = data;
       setDeck(deck);
-      console.log(deck);
       setPlayer1Cards(player1Cards);
-      console.log(player1Cards);
 
       setPlayer2Cards(player2Cards);
-      console.log(player2Cards);
 
       setSelectedCard(null);
       setPlayersTurn(null);
@@ -261,8 +212,6 @@ function PlokerGame() {
       setWinners(winners);
     });
     socket.on("user has left", (data) => {
-      console.log("user has left!");
-      console.log(data);
       setDeck([]);
       setPlayer1Cards([]);
       setPlayer2Cards([]);
@@ -327,10 +276,6 @@ function PlokerGame() {
   async function registerOrLoginUser() {
     if (showLoginForm) {
       let loginResult = await API.login(enteredUsername, enteredPassword);
-      console.log(
-        "🚀 ~ file: PlokerGame.js ~ line 331 ~ registerOrLoginUser ~ loginResult",
-        loginResult
-      );
 
       if (loginResult.status === "success" && loginResult.user) {
         localStorage.setItem("plokerUsername", loginResult.newUser.username);
@@ -338,7 +283,6 @@ function PlokerGame() {
         setSnackBarMessage(`Welcome ${loginResult.user.username}!`);
         setShowSnackbarMessage(true);
       } else if (loginResult.status === "error" && loginResult.message) {
-        console.log(`loginResult.status === "error"`);
         setSnackBarMessageType("error");
         setSnackBarMessage(loginResult.message);
         setShowSnackbarMessage(true);
@@ -350,10 +294,6 @@ function PlokerGame() {
       setShowLoginForm(false);
     } else if (showRegisterForm) {
       let registerResult = await API.register(enteredUsername, enteredPassword);
-      console.log(
-        "🚀 ~ file: PlokerGame.js ~ line 350 ~ registerOrLoginUser ~ registerResult",
-        registerResult
-      );
 
       if (registerResult.status === "success") {
         localStorage.setItem("username", registerResult.newUser.username);
@@ -376,8 +316,6 @@ function PlokerGame() {
   }
 
   function startGame(p2Username, rmName) {
-    console.log("rmName", rmName);
-
     setPlayer1HandsSolved([]);
     setPlayer2HandsSolved([]);
     setWinners([]);
@@ -468,13 +406,12 @@ function PlokerGame() {
   }
 
   function completeGameShortcut() {
-    console.log("complete game");
     let p1CardsFinal = [
-      ["Jc", "Qc", "10s", "4s", "9d"],
+      ["Jc", "Qc", "Ts", "4s", "9d"],
       ["Kd", "5d", "6c", "9s", "3h"],
-      ["4h", "Jh", "5s", "Ad", "10d"],
+      ["4h", "Jh", "5s", "Ad", "Td"],
       ["3d", "3s", "7d", "3c", "2d"],
-      ["10c", "5h", "10h", "Kh", "8h"],
+      ["Tc", "5h", "Th", "Kh", "8h"],
     ];
     let p2CardsFinal = [
       ["5c", "6h", "4c", "8s", "6d"],
@@ -494,11 +431,6 @@ function PlokerGame() {
   }
 
   function placeCard(card, playerSide, handNumber) {
-    console.log(
-      "🚀 ~ file: App.js ~ line 307 ~ placeCard ~ handNumber",
-      handNumber
-    );
-
     let playerThatPlayed = playersUsername === player1Username ? 1 : 2;
 
     if (playersTurn !== playerThatPlayed) {
@@ -526,11 +458,6 @@ function PlokerGame() {
         largestDeckLength = pHand.length;
       }
     }
-
-    console.log("largestDeckLength", largestDeckLength);
-    console.log("allDecksSameLength", allDecksSameLength);
-
-    console.log(playersCards[handNumber]);
 
     if (playersCards[handNumber].length > largestDeckLength) {
       return;
@@ -577,8 +504,6 @@ function PlokerGame() {
     const newCard = tempDeck.pop();
     setSelectedCard(newCard);
 
-    console.log("roomName", roomName);
-
     socket.emit("card played", {
       deck: tempDeck,
       player1Cards: tempPlayer1Cards,
@@ -590,19 +515,34 @@ function PlokerGame() {
   }
 
   function finishGame(theDeck, theP1Cards, theP2Cards) {
-    let p1h1Solved = Hand.solve(player1Cards[0], "standard", false);
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 593 ~ finishGame ~ theP1Cards",
+      theP1Cards
+    );
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 593 ~ finishGame ~ theP2Cards",
+      theP2Cards
+    );
 
+    let p1h1Solved = Hand.solve(player1Cards[0], "standard", false);
     let p1h2Solved = Hand.solve(player1Cards[1], "standard", false);
     let p1h3Solved = Hand.solve(player1Cards[2], "standard", false);
     let p1h4Solved = Hand.solve(player1Cards[3], "standard", false);
     let p1h5Solved = Hand.solve(player1Cards[4], "standard", false);
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 598 ~ finishGame ~ p1h5Solved",
+      p1h5Solved
+    );
 
     let p2h1Solved = Hand.solve(player2Cards[0], "standard", false);
-
     let p2h2Solved = Hand.solve(player2Cards[1], "standard", false);
     let p2h3Solved = Hand.solve(player2Cards[2], "standard", false);
     let p2h4Solved = Hand.solve(player2Cards[3], "standard", false);
     let p2h5Solved = Hand.solve(player2Cards[4], "standard", false);
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 605 ~ finishGame ~ p2h5Solved",
+      p2h5Solved
+    );
 
     let tempP1HandsSolved = [
       p1h1Solved,
@@ -627,6 +567,10 @@ function PlokerGame() {
     const winners3 = Hand.winners([p1h3Solved, p2h3Solved]);
     const winners4 = Hand.winners([p1h4Solved, p2h4Solved]);
     const winners5 = Hand.winners([p1h5Solved, p2h5Solved]);
+    console.log(
+      "🚀 ~ file: PlokerGame.js ~ line 630 ~ finishGame ~ winners5",
+      winners5
+    );
 
     let theWinningHands = [winners1, winners2, winners3, winners4, winners5];
     let tempWinners = [];
@@ -993,18 +937,19 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
+
                   alignItems: "center",
                   height: "100%",
                 }}
                 className="firstRow!!"
               >
                 {player2HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[0] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1012,12 +957,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[0].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player2Cards[0].map((card) => (
                   <img
@@ -1034,17 +978,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player2HandsSolved[1] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[1] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1052,12 +996,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[1].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player2Cards[1].map((card) => (
                   <img
@@ -1074,17 +1017,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player2HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[2] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1092,12 +1035,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[2].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player2Cards[2].map((card) => (
                   <img
@@ -1114,17 +1056,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player2HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[3] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1132,12 +1074,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[3].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player2Cards[3].map((card) => (
                   <img
@@ -1154,17 +1095,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player2HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[4] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1172,12 +1113,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[4].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player2Cards[4].map((card) => (
                   <img
@@ -1219,12 +1159,11 @@ function PlokerGame() {
                 }}
               >
                 {player1HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[0] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1232,12 +1171,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[0].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player1Cards[0].map((card) => (
                   <img
@@ -1254,17 +1192,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player1HandsSolved[1] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[1] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1272,12 +1210,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[1].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player1Cards[1].map((card) => (
                   <img
@@ -1294,17 +1231,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player1HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[2] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1312,12 +1249,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[2].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player1Cards[2].map((card) => (
                   <img
@@ -1334,17 +1270,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player1HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[3] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1352,12 +1288,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[3].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player1Cards[3].map((card) => (
                   <img
@@ -1374,17 +1309,17 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
                 {player1HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[4] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1392,12 +1327,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[4].descr}
-                  </Paper>
+                  </div>
                 ) : null}
                 {player1Cards[4].map((card) => (
                   <img
@@ -1411,6 +1345,7 @@ function PlokerGame() {
           ) : null}
         </Box>
       )}
+      <Box sx={{ width: "100%", minHeight: "100px" }}></Box>
       {playersUsername === player2Username ? (
         <Box sx={{ width: "100%", minHeight: "200px" }}>
           {player2Cards.length > 0 ? (
@@ -1430,24 +1365,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player2Cards[0].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 2, 0)}
-                  ></img>
-                ))}
+                {player2Cards[0].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 2, 0)}
+                    ></img>
+                  );
+                })}
                 {player2HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[0] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1455,12 +1399,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[0].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>
               <Grid
@@ -1470,24 +1413,35 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player2Cards[1].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 2, 1)}
-                  ></img>
-                ))}
+                {player2Cards[1].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      s
+                      onClick={() => placeCard(card, 2, 1)}
+                    ></img>
+                  );
+                })}
                 {player2HandsSolved[1] ? (
-                  <Paper
+                  <div
                     variant="outlined"
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[1] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1495,12 +1449,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[1].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1510,24 +1463,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player2Cards[2].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 2, 2)}
-                  ></img>
-                ))}
+                {player2Cards[2].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 2, 2)}
+                    ></img>
+                  );
+                })}
                 {player2HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[2] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1535,12 +1497,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[2].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1550,24 +1511,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player2Cards[3].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 2, 3)}
-                  ></img>
-                ))}
+                {player2Cards[3].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 2, 3)}
+                    ></img>
+                  );
+                })}
                 {player2HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[3] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1575,12 +1545,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[3].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1590,24 +1559,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player2Cards[4].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 2, 4)}
-                  ></img>
-                ))}
+                {player2Cards[4].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 2, 4)}
+                    ></img>
+                  );
+                })}
                 {player2HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[4] === 2
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1615,12 +1593,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player2HandsSolved[4].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>
             </Grid>
@@ -1643,24 +1620,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player1Cards[0].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 1, 0)}
-                  ></img>
-                ))}
+                {player1Cards[0].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 1, 0)}
+                    ></img>
+                  );
+                })}
                 {player1HandsSolved[0] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[0] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1668,12 +1654,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[0].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>
               <Grid
@@ -1683,6 +1668,7 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
@@ -1695,12 +1681,11 @@ function PlokerGame() {
                   ></img>
                 ))}
                 {player1HandsSolved[1] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[1] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1708,12 +1693,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[1].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1723,24 +1707,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player1Cards[2].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 1, 2)}
-                  ></img>
-                ))}
+                {player1Cards[2].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 1, 2)}
+                    ></img>
+                  );
+                })}
                 {player1HandsSolved[2] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[2] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1748,12 +1741,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[2].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1763,24 +1755,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player1Cards[3].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 1, 3)}
-                  ></img>
-                ))}
+                {player1Cards[3].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 1, 3)}
+                    ></img>
+                  );
+                })}
                 {player1HandsSolved[3] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[3] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1788,12 +1789,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[3].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>{" "}
               <Grid
@@ -1803,24 +1803,33 @@ function PlokerGame() {
                   display: "flex",
                   justifyContent: "center",
                   flexDirection: "column",
+                  position: "relative",
 
                   alignItems: "center",
                 }}
               >
-                {player1Cards[4].map((card) => (
-                  <img
-                    style={{ height: "100px" }}
-                    src={`/playingCards/${card}.png`}
-                    onClick={() => placeCard(card, 1, 4)}
-                  ></img>
-                ))}
+                {player1Cards[4].map((card, index) => {
+                  let zIndexNum = index * 10;
+                  let positioningPixels = zIndexNum * 2.5;
+                  return (
+                    <img
+                      style={{
+                        height: "100px",
+                        zIndex: zIndexNum,
+                        position: "absolute",
+                        top: positioningPixels,
+                      }}
+                      src={`/playingCards/${card}.png`}
+                      onClick={() => placeCard(card, 1, 4)}
+                    ></img>
+                  );
+                })}
                 {player1HandsSolved[4] ? (
-                  <Paper
-                    variant="outlined"
+                  <div
                     style={{
                       display: "flex",
                       margin: "5px",
-                      backgroundColor: winners[0]
+                      color: winners[0]
                         ? winners[4] === 1
                           ? "#59Ae57"
                           : "#dd5c56"
@@ -1828,12 +1837,11 @@ function PlokerGame() {
                       height: "50px",
                       justifyContent: "center",
                       alignItems: "center",
-                      color: "black",
                       fontWeight: "bold",
                     }}
                   >
                     {player1HandsSolved[4].descr}
-                  </Paper>
+                  </div>
                 ) : null}
               </Grid>
             </Grid>
@@ -1979,7 +1987,7 @@ function PlokerGame() {
           {snackBarMessage}
         </Alert>
       </Snackbar>
-      {/* <Button onClick={() => completeGameShortcut()}>Complete Game</Button> */}
+      <Button onClick={() => completeGameShortcut()}>Complete Game</Button>
     </Container>
   );
 }
